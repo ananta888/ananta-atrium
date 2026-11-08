@@ -17,6 +17,7 @@ export interface HealthReport {
     hub: { url: string; reachable: boolean; lastError: string | null; lastSuccessAt: string | null }
     llama: Array<{ url: string; reachable: boolean; lastError: string | null; tokensPerSecond: number }>
     workerPool?: { reachable: boolean; lastError: string | null; lastSuccessAt: string | null }
+    events?: { connected: boolean; lastEventAt: string | null; lastError: string | null }
   }
 }
 

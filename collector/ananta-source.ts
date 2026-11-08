@@ -4,6 +4,7 @@ import type { CampusDef } from '../src/shared/campus.js'
 import { hashString } from '../src/sim/rng.js'
 import { log } from './logger.js'
 import { buildTrace, parseUnifiedDiff, pickWorkspaceDiffArtifact } from './trace.js'
+import type { TraceEvent } from '../src/shared/agent-state.js'
 
 export interface HubSession {
   id: string
@@ -141,6 +142,7 @@ export class AnantaHubSource {
   private readonly fetcher: typeof fetch
   private readonly traceEnabled: boolean
   private readonly leaseProvider: ((taskId: string) => { acquired_at: number; deadline_at: number } | null) | undefined
+  private readonly eventProvider: ((taskId?: string, sessionId?: string) => TraceEvent[]) | undefined
   private readonly detailCache = new Map<string, TaskDetailCacheEntry>()
   private readonly diffCache = new Map<string, { at: number; text: string }>()
   private readonly toolCallCache = new Map<string, { at: number; value: unknown }>()
@@ -152,6 +154,7 @@ export class AnantaHubSource {
     fetcher?: typeof fetch
     traceEnabled?: boolean
     leaseProvider?: (taskId: string) => { acquired_at: number; deadline_at: number } | null
+    eventProvider?: (taskId?: string, sessionId?: string) => TraceEvent[]
   }) {
     this.baseUrl = options.baseUrl
     this.token = options.token
@@ -159,6 +162,7 @@ export class AnantaHubSource {
     this.fetcher = options.fetcher ?? fetch
     this.traceEnabled = options.traceEnabled ?? true
     this.leaseProvider = options.leaseProvider
+    this.eventProvider = options.eventProvider
   }
 
   private async getJson(path: string): Promise<unknown> {
@@ -268,6 +272,7 @@ export class AnantaHubSource {
         ...(diff ? { diff } : {}),
         lease: this.leaseProvider?.(taskId) ?? null,
         ...(toolCalls !== undefined ? { toolCalls } : {}),
+        ...(this.eventProvider ? { extraEvents: this.eventProvider(taskId, agent.id) } : {}),
         taskId,
         sessionId: agent.id,
         nowMs: now,

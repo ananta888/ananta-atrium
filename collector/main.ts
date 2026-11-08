@@ -6,6 +6,7 @@ import { loadCampus } from '../src/world/campus-loader.js'
 import { AnantaHubSource } from './ananta-source.js'
 import { ChatBridge } from './chat.js'
 import { WorkerPoolSource } from './worker-pool.js'
+import { AnantaEventStream } from './event-stream.js'
 import type { OpsStatus } from '../src/shared/agent-state.js'
 import { loadConfig } from './config.js'
 import { LlamaMetricsSource } from './llama-source.js'
@@ -33,6 +34,10 @@ const workerPool =
   config.source === 'live' && config.hubToken
     ? new WorkerPoolSource({ baseUrl: config.hubUrl, token: config.hubToken })
     : null
+const events =
+  config.source === 'live' && config.hubToken
+    ? new AnantaEventStream({ baseUrl: config.hubUrl, token: config.hubToken })
+    : null
 const hub = config.source === 'live'
   ? new AnantaHubSource({
       baseUrl: config.hubUrl,
@@ -40,6 +45,7 @@ const hub = config.source === 'live'
       campus,
       traceEnabled: config.traceEnabled,
       ...(workerPool ? { leaseProvider: (taskId: string) => workerPool.leaseForTask(taskId) } : {}),
+      ...(events ? { eventProvider: (taskId?: string, sessionId?: string) => events.eventsFor(taskId, sessionId) } : {}),
     })
   : null
 const llama = new LlamaMetricsSource(config.llamaUrls)
@@ -91,6 +97,7 @@ if (config.source === 'fake') {
       agents = agents.map((agent) => ({ ...agent, stale: true }))
     }
   }
+  events?.start()
   void poll()
   livePollTimer = setInterval(() => void poll(), config.pollMs)
 }
@@ -120,6 +127,15 @@ function health(): HealthReport {
         lastError: status.lastError,
         tokensPerSecond: Number(status.tokensPerSecond.toFixed(2)),
       })),
+      ...(events
+        ? {
+            events: {
+              connected: events.status.connected,
+              lastEventAt: events.status.lastEventAt ? new Date(events.status.lastEventAt).toISOString() : null,
+              lastError: events.status.lastError,
+            },
+          }
+        : {}),
       ...(workerPool
         ? {
             workerPool: {
@@ -147,6 +163,7 @@ const shutdown = async (signal: string): Promise<void> => {
   log('info', 'collector shutting down', { signal })
   if (fakeTimer) clearInterval(fakeTimer)
   if (livePollTimer) clearInterval(livePollTimer)
+  events?.stop()
   await server.close()
   process.exit(0)
 }

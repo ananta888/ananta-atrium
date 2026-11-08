@@ -1469,7 +1469,7 @@
       "status": "partial",
       "priority": "P0",
       "risk": "critical",
-      "progress_percent": 35,
+      "progress_percent": 40,
       "estimate": "3d",
       "depends_on": [
         "AT-605",
@@ -1482,17 +1482,17 @@
         "If the reserved-slot approach misses the threshold, the ADR records the fallback to a dedicated small chat model.",
         "An ADR records fairness, starvation protection, rollback and the exact Ananta changes."
       ],
-      "notes": "Atrium side is ready to display and request an interactive lane, but Ananta still lacks lease priority/reserved slot; exact patch and latency measurements remain."
+      "notes": "Atrium shows the queue and chat is ready; Ananta still needs lease priority and a reserved interactive slot. Patch is documented in ADR 006; no local scheduler fake."
     },
     {
       "id": "AT-608",
       "title": "SSE event ingestion and trace timeline",
       "type": "data",
       "milestone": "M6",
-      "status": "partial",
+      "status": "done",
       "priority": "P1",
       "risk": "medium",
-      "progress_percent": 30,
+      "progress_percent": 100,
       "estimate": "1d",
       "depends_on": [
         "AT-104"
@@ -1502,7 +1502,7 @@
         "Polling remains the fallback; duplicate events are deduplicated by event id.",
         "Event lag is exposed in /health and the HUD."
       ],
-      "notes": "Polling fallback covers events today; SSE ingestion with Last-Event-ID is not implemented yet."
+      "notes": "Collector consumes /api/events/stream with Last-Event-ID/reconnect, merges events into traces by task/session and reports lag in /health. Tests cover parsing, mapping and failure."
     },
     {
       "id": "AT-609",
@@ -1512,7 +1512,7 @@
       "status": "blocked",
       "priority": "P0",
       "risk": "high",
-      "progress_percent": 20,
+      "progress_percent": 25,
       "estimate": "1d",
       "depends_on": [
         "AT-602",
@@ -1529,7 +1529,7 @@
         "Killing the collector falls back to the labelled fake source within 2 s; restart resumes.",
         "Evidence is recorded in the task notes with date, hub commit and measurements."
       ],
-      "notes": "End-to-end acceptance needs a valid hub token and the AT-607 scheduling change."
+      "notes": "Needs a valid hub JWT and the AT-607 Ananta change; all automated fixtures are in place."
     },
     {
       "id": "AT-610",
@@ -1592,11 +1592,11 @@
     "by_status": {
       "todo": 0,
       "in_progress": 0,
-      "partial": 7,
+      "partial": 6,
       "blocked": 2,
-      "done": 56
+      "done": 57
     },
-    "progress_percent_done": 86.2,
+    "progress_percent_done": 87.7,
     "by_priority": {
       "P0": 42,
       "P1": 17,
@@ -1611,8 +1611,8 @@
     },
     "critical_path": {
       "total": 31,
-      "done": 26,
-      "remaining": 5
+      "done": 27,
+      "remaining": 4
     },
     "milestones": {
       "total": 7,
@@ -1641,17 +1641,17 @@
       },
       "data": {
         "total": 13,
-        "done": 12,
-        "partial": 1,
+        "done": 13,
+        "partial": 0,
         "blocked": 0,
         "by_status": {
           "todo": 0,
           "in_progress": 0,
-          "partial": 1,
+          "partial": 0,
           "blocked": 0,
-          "done": 12
+          "done": 13
         },
-        "progress_percent": 92.3
+        "progress_percent": 100.0
       },
       "docs": {
         "total": 4,
@@ -1785,9 +1785,9 @@
     "state": "blocked",
     "todo_remaining": 0,
     "in_progress": 0,
-    "partial": 7,
+    "partial": 6,
     "blocked": 2,
-    "done": 56
+    "done": 57
   },
   "execution_stage_summary": {
     "current_milestone": "M0",

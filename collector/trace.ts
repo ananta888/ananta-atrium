@@ -254,6 +254,7 @@ export function buildTrace(input: {
   diff?: AgentDiff
   lease?: { acquired_at?: number; deadline_at?: number } | null
   toolCalls?: unknown
+  extraEvents?: TraceEvent[]
   taskId?: string
   sessionId?: string
   nowMs?: number
@@ -276,6 +277,7 @@ export function buildTrace(input: {
   const events = [
     ...traceEventsFromTaskDetail(input.taskDetail),
     ...toolCallEvents(input.toolCalls),
+    ...(input.extraEvents ?? []),
   ].sort((a, b) => a.at.localeCompare(b.at))
   if (events.length > 0) trace.events = events.slice(-10)
 

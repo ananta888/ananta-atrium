@@ -10,7 +10,7 @@ Status: accepted, live acceptance pending.
   sync points; source-control v1 exposes workspaces/snapshots, not a live diff.
 - Live file activity: session tool-calls (`/api/sessions/<id>/tool-calls`).
 - Queue: `GET /api/worker-pool/status`, `/queues`, `/leases` (read-only).
-- Events: `/api/events/stream` (SSE) and `/snakes/<id>/events/stream`.
+- Events: `/api/events/stream` (SSE, Last-Event-ID, reconnect) and `/snakes/<id>/events/stream`.
 
 ## Budgets and attempts
 
