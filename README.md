@@ -7,6 +7,8 @@ clearly labelled fake source for development.
 
 ![Plaza at dusk](docs/screenshots/plaza.png)
 
+**Play the current build:** https://www.ananta.de/ananta-atrium/
+
 ## Quick start
 
 ```bash
