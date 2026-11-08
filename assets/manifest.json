@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "assets": [
+    {
+      "id": "plaza-grid",
+      "kind": "texture",
+      "licence": "CC0-1.0",
+      "source": "generated in-repo (devtools/generate-scene.mjs family)",
+      "variants": {
+        "png": "assets/textures/plaza-grid.svg"
+      },
+      "sha256": "cc2efc911eef64facd455ea372616b2ddcc7c20107a2131d2f998950b96ade7a"
+    }
+  ]
+}

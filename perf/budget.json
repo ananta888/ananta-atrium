@@ -1,0 +1,7 @@
+{
+  "minFps": 2,
+  "maxDrawCalls": 900,
+  "regressionPercent": 35,
+  "notes": "Headless SwiftShader budgets are regression gates, not the 60 fps product target.",
+  "minCullingDropPercent": 40
+}

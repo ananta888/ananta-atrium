@@ -1,0 +1,71 @@
+{
+  "capturedAt": "2026-11-08T12:36:47.051Z",
+  "runs": 2,
+  "samplesPerPoint": 12,
+  "environment": {
+    "backend": "webgl",
+    "note": "Chromium headless, software rasterizer (SwiftShader)"
+  },
+  "waypoints": {
+    "plaza": {
+      "fps": 3.998080921157843,
+      "drawCalls": 650,
+      "meshes": 1758,
+      "visibleRooms": 5,
+      "naiveDrawCalls": 1487,
+      "cullingDropPercent": 56.3
+    },
+    "lobby": {
+      "fps": 4.292336748123851,
+      "drawCalls": 326,
+      "meshes": 1758,
+      "visibleRooms": 16,
+      "naiveDrawCalls": 1480,
+      "cullingDropPercent": 78
+    },
+    "office": {
+      "fps": 4.430529300570032,
+      "drawCalls": 265,
+      "meshes": 1758,
+      "visibleRooms": 12,
+      "naiveDrawCalls": 1456,
+      "cullingDropPercent": 81.8
+    },
+    "stairs": {
+      "fps": 4.939572562316093,
+      "drawCalls": 234,
+      "meshes": 1758,
+      "visibleRooms": 16
+    },
+    "floor-1": {
+      "fps": 4.880588273569691,
+      "drawCalls": 345,
+      "meshes": 1758,
+      "visibleRooms": 16
+    },
+    "forge": {
+      "fps": 4.120652711390328,
+      "drawCalls": 429,
+      "meshes": 1758,
+      "visibleRooms": 21
+    },
+    "observatory": {
+      "fps": 4.1939271934221765,
+      "drawCalls": 311,
+      "meshes": 1758,
+      "visibleRooms": 17
+    },
+    "library": {
+      "fps": 4.616805170821793,
+      "drawCalls": 116,
+      "meshes": 1758,
+      "visibleRooms": 12
+    },
+    "studio": {
+      "fps": 5.027820607356967,
+      "drawCalls": 113,
+      "meshes": 1758,
+      "visibleRooms": 12
+    }
+  }
+}

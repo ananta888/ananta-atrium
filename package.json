@@ -1,0 +1,51 @@
+{
+  "name": "ananta-atrium",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "First-person browser campus visualising live Ananta agents",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run check:boundary && tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check:boundary": "node devtools/check-sim-boundary.mjs",
+    "collector:dev": "tsx collector/main.ts",
+    "collector:start": "tsx collector/main.ts",
+    "e2e": "playwright test",
+    "check:assets": "node --experimental-strip-types devtools/check-assets.mjs",
+    "perf": "node devtools/perf-check.mjs",
+    "perf:update": "node devtools/perf-check.mjs --update",
+    "check:i18n": "tsx devtools/check-i18n.ts",
+    "release:check": "node devtools/release-check.mjs",
+    "screenshots": "node devtools/screenshots.mjs"
+  },
+  "dependencies": {
+    "@babylonjs/core": "^9.35.0",
+    "@babylonjs/gui": "^9.35.0",
+    "@babylonjs/havok": "^1.3.14",
+    "@babylonjs/loaders": "^9.35.0",
+    "ajv": "^8.17.1",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.30.0",
+    "@playwright/test": "^1.54.0",
+    "@types/node": "^24.0.0",
+    "@types/ws": "^8.18.0",
+    "eslint": "^9.30.0",
+    "prettier": "^3.6.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.35.0",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  },
+  "license": "BSD-3-Clause"
+}

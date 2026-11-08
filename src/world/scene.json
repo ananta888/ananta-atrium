@@ -1,0 +1,2499 @@
+{
+  "version": 1,
+  "name": "Ananta Campus",
+  "buildings": [
+    {
+      "id": "atrium-hq",
+      "name": "Atrium HQ",
+      "origin": {
+        "x": -28,
+        "y": 0,
+        "z": 0
+      },
+      "floorHeight": 4,
+      "floors": 2,
+      "width": 24,
+      "depth": 14,
+      "stairs": {
+        "x": 10.5,
+        "z": 0
+      },
+      "entrance": {
+        "x": 0,
+        "z": 7
+      },
+      "rooms": [
+        {
+          "id": "atrium-hq-lobby",
+          "name": "Lobby",
+          "floor": 0,
+          "kind": "lobby",
+          "min": {
+            "x": -3,
+            "z": 1.5
+          },
+          "max": {
+            "x": 3,
+            "z": 7
+          },
+          "buildingId": "atrium-hq"
+        },
+        {
+          "id": "atrium-hq-office-a",
+          "name": "Studio A",
+          "floor": 0,
+          "kind": "office",
+          "min": {
+            "x": -12,
+            "z": 1.5
+          },
+          "max": {
+            "x": -3,
+            "z": 7
+          },
+          "buildingId": "atrium-hq"
+        },
+        {
+          "id": "atrium-hq-office-b",
+          "name": "Studio B",
+          "floor": 0,
+          "kind": "office",
+          "min": {
+            "x": 3,
+            "z": 1.5
+          },
+          "max": {
+            "x": 12,
+            "z": 7
+          },
+          "buildingId": "atrium-hq"
+        },
+        {
+          "id": "atrium-hq-meeting-a",
+          "name": "Meeting Alpha",
+          "floor": 0,
+          "kind": "meeting",
+          "min": {
+            "x": -12,
+            "z": -7
+          },
+          "max": {
+            "x": -3,
+            "z": -1.5
+          },
+          "buildingId": "atrium-hq"
+        },
+        {
+          "id": "atrium-hq-print",
+          "name": "Print Room",
+          "floor": 0,
+          "kind": "service",
+          "min": {
+            "x": -3,
+            "z": -7
+          },
+          "max": {
+            "x": 3,
+            "z": -1.5
+          },
+          "buildingId": "atrium-hq"
+        },
+        {
+          "id": "atrium-hq-cafe",
+          "name": "Café",
+          "floor": 0,
+          "kind": "social",
+          "min": {
+            "x": 3,
+            "z": -7
+          },
+          "max": {
+            "x": 12,
+            "z": -1.5
+          },
+          "buildingId": "atrium-hq"
+        },
+        {
+          "id": "atrium-hq-office-c",
+          "name": "Studio C",
+          "floor": 1,
+          "kind": "office",
+          "min": {
+            "x": -12,
+            "z": 1.5
+          },
+          "max": {
+            "x": -2,
+            "z": 7
+          },
+          "buildingId": "atrium-hq"
+        },
+        {
+          "id": "atrium-hq-office-d",
+          "name": "Studio D",
+          "floor": 1,
+          "kind": "office",
+          "min": {
+            "x": -2,
+            "z": 1.5
+          },
+          "max": {
+            "x": 7,
+            "z": 7
+          },
+          "buildingId": "atrium-hq"
+        },
+        {
+          "id": "atrium-hq-meeting-b",
+          "name": "Meeting Beta",
+          "floor": 1,
+          "kind": "meeting",
+          "min": {
+            "x": 7,
+            "z": 1.5
+          },
+          "max": {
+            "x": 12,
+            "z": 7
+          },
+          "buildingId": "atrium-hq"
+        },
+        {
+          "id": "atrium-hq-office-e",
+          "name": "Studio E",
+          "floor": 1,
+          "kind": "office",
+          "min": {
+            "x": -12,
+            "z": -7
+          },
+          "max": {
+            "x": -2,
+            "z": -1.5
+          },
+          "buildingId": "atrium-hq"
+        },
+        {
+          "id": "atrium-hq-office-f",
+          "name": "Studio F",
+          "floor": 1,
+          "kind": "office",
+          "min": {
+            "x": -2,
+            "z": -7
+          },
+          "max": {
+            "x": 7,
+            "z": -1.5
+          },
+          "buildingId": "atrium-hq"
+        },
+        {
+          "id": "atrium-hq-lounge",
+          "name": "Lounge",
+          "floor": 1,
+          "kind": "social",
+          "min": {
+            "x": 7,
+            "z": -7
+          },
+          "max": {
+            "x": 12,
+            "z": -1.5
+          },
+          "buildingId": "atrium-hq"
+        }
+      ]
+    },
+    {
+      "id": "forge",
+      "name": "Forge",
+      "origin": {
+        "x": 4,
+        "y": 0,
+        "z": 0
+      },
+      "floorHeight": 4,
+      "floors": 2,
+      "width": 24,
+      "depth": 14,
+      "stairs": {
+        "x": 10.5,
+        "z": 0
+      },
+      "entrance": {
+        "x": 0,
+        "z": 7
+      },
+      "rooms": [
+        {
+          "id": "forge-lobby",
+          "name": "Lobby",
+          "floor": 0,
+          "kind": "lobby",
+          "min": {
+            "x": -3,
+            "z": 1.5
+          },
+          "max": {
+            "x": 3,
+            "z": 7
+          },
+          "buildingId": "forge"
+        },
+        {
+          "id": "forge-office-a",
+          "name": "Studio A",
+          "floor": 0,
+          "kind": "office",
+          "min": {
+            "x": -12,
+            "z": 1.5
+          },
+          "max": {
+            "x": -3,
+            "z": 7
+          },
+          "buildingId": "forge"
+        },
+        {
+          "id": "forge-office-b",
+          "name": "Studio B",
+          "floor": 0,
+          "kind": "office",
+          "min": {
+            "x": 3,
+            "z": 1.5
+          },
+          "max": {
+            "x": 12,
+            "z": 7
+          },
+          "buildingId": "forge"
+        },
+        {
+          "id": "forge-meeting-a",
+          "name": "Meeting Alpha",
+          "floor": 0,
+          "kind": "meeting",
+          "min": {
+            "x": -12,
+            "z": -7
+          },
+          "max": {
+            "x": -3,
+            "z": -1.5
+          },
+          "buildingId": "forge"
+        },
+        {
+          "id": "forge-print",
+          "name": "Print Room",
+          "floor": 0,
+          "kind": "service",
+          "min": {
+            "x": -3,
+            "z": -7
+          },
+          "max": {
+            "x": 3,
+            "z": -1.5
+          },
+          "buildingId": "forge"
+        },
+        {
+          "id": "forge-cafe",
+          "name": "Café",
+          "floor": 0,
+          "kind": "social",
+          "min": {
+            "x": 3,
+            "z": -7
+          },
+          "max": {
+            "x": 12,
+            "z": -1.5
+          },
+          "buildingId": "forge"
+        },
+        {
+          "id": "forge-office-c",
+          "name": "Studio C",
+          "floor": 1,
+          "kind": "office",
+          "min": {
+            "x": -12,
+            "z": 1.5
+          },
+          "max": {
+            "x": -2,
+            "z": 7
+          },
+          "buildingId": "forge"
+        },
+        {
+          "id": "forge-office-d",
+          "name": "Studio D",
+          "floor": 1,
+          "kind": "office",
+          "min": {
+            "x": -2,
+            "z": 1.5
+          },
+          "max": {
+            "x": 7,
+            "z": 7
+          },
+          "buildingId": "forge"
+        },
+        {
+          "id": "forge-meeting-b",
+          "name": "Meeting Beta",
+          "floor": 1,
+          "kind": "meeting",
+          "min": {
+            "x": 7,
+            "z": 1.5
+          },
+          "max": {
+            "x": 12,
+            "z": 7
+          },
+          "buildingId": "forge"
+        },
+        {
+          "id": "forge-office-e",
+          "name": "Studio E",
+          "floor": 1,
+          "kind": "office",
+          "min": {
+            "x": -12,
+            "z": -7
+          },
+          "max": {
+            "x": -2,
+            "z": -1.5
+          },
+          "buildingId": "forge"
+        },
+        {
+          "id": "forge-office-f",
+          "name": "Studio F",
+          "floor": 1,
+          "kind": "office",
+          "min": {
+            "x": -2,
+            "z": -7
+          },
+          "max": {
+            "x": 7,
+            "z": -1.5
+          },
+          "buildingId": "forge"
+        },
+        {
+          "id": "forge-lounge",
+          "name": "Lounge",
+          "floor": 1,
+          "kind": "social",
+          "min": {
+            "x": 7,
+            "z": -7
+          },
+          "max": {
+            "x": 12,
+            "z": -1.5
+          },
+          "buildingId": "forge"
+        }
+      ]
+    },
+    {
+      "id": "observatory",
+      "name": "Observatory",
+      "origin": {
+        "x": 36,
+        "y": 0,
+        "z": 0
+      },
+      "floorHeight": 4,
+      "floors": 2,
+      "width": 24,
+      "depth": 14,
+      "stairs": {
+        "x": 10.5,
+        "z": 0
+      },
+      "entrance": {
+        "x": 0,
+        "z": 7
+      },
+      "rooms": [
+        {
+          "id": "observatory-lobby",
+          "name": "Lobby",
+          "floor": 0,
+          "kind": "lobby",
+          "min": {
+            "x": -3,
+            "z": 1.5
+          },
+          "max": {
+            "x": 3,
+            "z": 7
+          },
+          "buildingId": "observatory"
+        },
+        {
+          "id": "observatory-office-a",
+          "name": "Studio A",
+          "floor": 0,
+          "kind": "office",
+          "min": {
+            "x": -12,
+            "z": 1.5
+          },
+          "max": {
+            "x": -3,
+            "z": 7
+          },
+          "buildingId": "observatory"
+        },
+        {
+          "id": "observatory-office-b",
+          "name": "Studio B",
+          "floor": 0,
+          "kind": "office",
+          "min": {
+            "x": 3,
+            "z": 1.5
+          },
+          "max": {
+            "x": 12,
+            "z": 7
+          },
+          "buildingId": "observatory"
+        },
+        {
+          "id": "observatory-meeting-a",
+          "name": "Meeting Alpha",
+          "floor": 0,
+          "kind": "meeting",
+          "min": {
+            "x": -12,
+            "z": -7
+          },
+          "max": {
+            "x": -3,
+            "z": -1.5
+          },
+          "buildingId": "observatory"
+        },
+        {
+          "id": "observatory-print",
+          "name": "Print Room",
+          "floor": 0,
+          "kind": "service",
+          "min": {
+            "x": -3,
+            "z": -7
+          },
+          "max": {
+            "x": 3,
+            "z": -1.5
+          },
+          "buildingId": "observatory"
+        },
+        {
+          "id": "observatory-cafe",
+          "name": "Café",
+          "floor": 0,
+          "kind": "social",
+          "min": {
+            "x": 3,
+            "z": -7
+          },
+          "max": {
+            "x": 12,
+            "z": -1.5
+          },
+          "buildingId": "observatory"
+        },
+        {
+          "id": "observatory-office-c",
+          "name": "Studio C",
+          "floor": 1,
+          "kind": "office",
+          "min": {
+            "x": -12,
+            "z": 1.5
+          },
+          "max": {
+            "x": -2,
+            "z": 7
+          },
+          "buildingId": "observatory"
+        },
+        {
+          "id": "observatory-office-d",
+          "name": "Studio D",
+          "floor": 1,
+          "kind": "office",
+          "min": {
+            "x": -2,
+            "z": 1.5
+          },
+          "max": {
+            "x": 7,
+            "z": 7
+          },
+          "buildingId": "observatory"
+        },
+        {
+          "id": "observatory-meeting-b",
+          "name": "Meeting Beta",
+          "floor": 1,
+          "kind": "meeting",
+          "min": {
+            "x": 7,
+            "z": 1.5
+          },
+          "max": {
+            "x": 12,
+            "z": 7
+          },
+          "buildingId": "observatory"
+        },
+        {
+          "id": "observatory-office-e",
+          "name": "Studio E",
+          "floor": 1,
+          "kind": "office",
+          "min": {
+            "x": -12,
+            "z": -7
+          },
+          "max": {
+            "x": -2,
+            "z": -1.5
+          },
+          "buildingId": "observatory"
+        },
+        {
+          "id": "observatory-office-f",
+          "name": "Studio F",
+          "floor": 1,
+          "kind": "office",
+          "min": {
+            "x": -2,
+            "z": -7
+          },
+          "max": {
+            "x": 7,
+            "z": -1.5
+          },
+          "buildingId": "observatory"
+        },
+        {
+          "id": "observatory-lounge",
+          "name": "Lounge",
+          "floor": 1,
+          "kind": "social",
+          "min": {
+            "x": 7,
+            "z": -7
+          },
+          "max": {
+            "x": 12,
+            "z": -1.5
+          },
+          "buildingId": "observatory"
+        }
+      ]
+    },
+    {
+      "id": "library",
+      "name": "Library",
+      "origin": {
+        "x": -14,
+        "y": 0,
+        "z": -40
+      },
+      "floorHeight": 4,
+      "floors": 2,
+      "width": 24,
+      "depth": 14,
+      "stairs": {
+        "x": 10.5,
+        "z": 0
+      },
+      "entrance": {
+        "x": 0,
+        "z": 7
+      },
+      "rooms": [
+        {
+          "id": "library-lobby",
+          "name": "Lobby",
+          "floor": 0,
+          "kind": "lobby",
+          "min": {
+            "x": -3,
+            "z": 1.5
+          },
+          "max": {
+            "x": 3,
+            "z": 7
+          },
+          "buildingId": "library"
+        },
+        {
+          "id": "library-office-a",
+          "name": "Studio A",
+          "floor": 0,
+          "kind": "office",
+          "min": {
+            "x": -12,
+            "z": 1.5
+          },
+          "max": {
+            "x": -3,
+            "z": 7
+          },
+          "buildingId": "library"
+        },
+        {
+          "id": "library-office-b",
+          "name": "Studio B",
+          "floor": 0,
+          "kind": "office",
+          "min": {
+            "x": 3,
+            "z": 1.5
+          },
+          "max": {
+            "x": 12,
+            "z": 7
+          },
+          "buildingId": "library"
+        },
+        {
+          "id": "library-meeting-a",
+          "name": "Meeting Alpha",
+          "floor": 0,
+          "kind": "meeting",
+          "min": {
+            "x": -12,
+            "z": -7
+          },
+          "max": {
+            "x": -3,
+            "z": -1.5
+          },
+          "buildingId": "library"
+        },
+        {
+          "id": "library-print",
+          "name": "Print Room",
+          "floor": 0,
+          "kind": "service",
+          "min": {
+            "x": -3,
+            "z": -7
+          },
+          "max": {
+            "x": 3,
+            "z": -1.5
+          },
+          "buildingId": "library"
+        },
+        {
+          "id": "library-cafe",
+          "name": "Café",
+          "floor": 0,
+          "kind": "social",
+          "min": {
+            "x": 3,
+            "z": -7
+          },
+          "max": {
+            "x": 12,
+            "z": -1.5
+          },
+          "buildingId": "library"
+        },
+        {
+          "id": "library-office-c",
+          "name": "Studio C",
+          "floor": 1,
+          "kind": "office",
+          "min": {
+            "x": -12,
+            "z": 1.5
+          },
+          "max": {
+            "x": -2,
+            "z": 7
+          },
+          "buildingId": "library"
+        },
+        {
+          "id": "library-office-d",
+          "name": "Studio D",
+          "floor": 1,
+          "kind": "office",
+          "min": {
+            "x": -2,
+            "z": 1.5
+          },
+          "max": {
+            "x": 7,
+            "z": 7
+          },
+          "buildingId": "library"
+        },
+        {
+          "id": "library-meeting-b",
+          "name": "Meeting Beta",
+          "floor": 1,
+          "kind": "meeting",
+          "min": {
+            "x": 7,
+            "z": 1.5
+          },
+          "max": {
+            "x": 12,
+            "z": 7
+          },
+          "buildingId": "library"
+        },
+        {
+          "id": "library-office-e",
+          "name": "Studio E",
+          "floor": 1,
+          "kind": "office",
+          "min": {
+            "x": -12,
+            "z": -7
+          },
+          "max": {
+            "x": -2,
+            "z": -1.5
+          },
+          "buildingId": "library"
+        },
+        {
+          "id": "library-office-f",
+          "name": "Studio F",
+          "floor": 1,
+          "kind": "office",
+          "min": {
+            "x": -2,
+            "z": -7
+          },
+          "max": {
+            "x": 7,
+            "z": -1.5
+          },
+          "buildingId": "library"
+        },
+        {
+          "id": "library-lounge",
+          "name": "Lounge",
+          "floor": 1,
+          "kind": "social",
+          "min": {
+            "x": 7,
+            "z": -7
+          },
+          "max": {
+            "x": 12,
+            "z": -1.5
+          },
+          "buildingId": "library"
+        }
+      ]
+    },
+    {
+      "id": "studio",
+      "name": "Studio",
+      "origin": {
+        "x": 26,
+        "y": 0,
+        "z": -40
+      },
+      "floorHeight": 4,
+      "floors": 2,
+      "width": 24,
+      "depth": 14,
+      "stairs": {
+        "x": 10.5,
+        "z": 0
+      },
+      "entrance": {
+        "x": 0,
+        "z": 7
+      },
+      "rooms": [
+        {
+          "id": "studio-lobby",
+          "name": "Lobby",
+          "floor": 0,
+          "kind": "lobby",
+          "min": {
+            "x": -3,
+            "z": 1.5
+          },
+          "max": {
+            "x": 3,
+            "z": 7
+          },
+          "buildingId": "studio"
+        },
+        {
+          "id": "studio-office-a",
+          "name": "Studio A",
+          "floor": 0,
+          "kind": "office",
+          "min": {
+            "x": -12,
+            "z": 1.5
+          },
+          "max": {
+            "x": -3,
+            "z": 7
+          },
+          "buildingId": "studio"
+        },
+        {
+          "id": "studio-office-b",
+          "name": "Studio B",
+          "floor": 0,
+          "kind": "office",
+          "min": {
+            "x": 3,
+            "z": 1.5
+          },
+          "max": {
+            "x": 12,
+            "z": 7
+          },
+          "buildingId": "studio"
+        },
+        {
+          "id": "studio-meeting-a",
+          "name": "Meeting Alpha",
+          "floor": 0,
+          "kind": "meeting",
+          "min": {
+            "x": -12,
+            "z": -7
+          },
+          "max": {
+            "x": -3,
+            "z": -1.5
+          },
+          "buildingId": "studio"
+        },
+        {
+          "id": "studio-print",
+          "name": "Print Room",
+          "floor": 0,
+          "kind": "service",
+          "min": {
+            "x": -3,
+            "z": -7
+          },
+          "max": {
+            "x": 3,
+            "z": -1.5
+          },
+          "buildingId": "studio"
+        },
+        {
+          "id": "studio-cafe",
+          "name": "Café",
+          "floor": 0,
+          "kind": "social",
+          "min": {
+            "x": 3,
+            "z": -7
+          },
+          "max": {
+            "x": 12,
+            "z": -1.5
+          },
+          "buildingId": "studio"
+        },
+        {
+          "id": "studio-office-c",
+          "name": "Studio C",
+          "floor": 1,
+          "kind": "office",
+          "min": {
+            "x": -12,
+            "z": 1.5
+          },
+          "max": {
+            "x": -2,
+            "z": 7
+          },
+          "buildingId": "studio"
+        },
+        {
+          "id": "studio-office-d",
+          "name": "Studio D",
+          "floor": 1,
+          "kind": "office",
+          "min": {
+            "x": -2,
+            "z": 1.5
+          },
+          "max": {
+            "x": 7,
+            "z": 7
+          },
+          "buildingId": "studio"
+        },
+        {
+          "id": "studio-meeting-b",
+          "name": "Meeting Beta",
+          "floor": 1,
+          "kind": "meeting",
+          "min": {
+            "x": 7,
+            "z": 1.5
+          },
+          "max": {
+            "x": 12,
+            "z": 7
+          },
+          "buildingId": "studio"
+        },
+        {
+          "id": "studio-office-e",
+          "name": "Studio E",
+          "floor": 1,
+          "kind": "office",
+          "min": {
+            "x": -12,
+            "z": -7
+          },
+          "max": {
+            "x": -2,
+            "z": -1.5
+          },
+          "buildingId": "studio"
+        },
+        {
+          "id": "studio-office-f",
+          "name": "Studio F",
+          "floor": 1,
+          "kind": "office",
+          "min": {
+            "x": -2,
+            "z": -7
+          },
+          "max": {
+            "x": 7,
+            "z": -1.5
+          },
+          "buildingId": "studio"
+        },
+        {
+          "id": "studio-lounge",
+          "name": "Lounge",
+          "floor": 1,
+          "kind": "social",
+          "min": {
+            "x": 7,
+            "z": -7
+          },
+          "max": {
+            "x": 12,
+            "z": -1.5
+          },
+          "buildingId": "studio"
+        }
+      ]
+    }
+  ],
+  "desks": [
+    {
+      "id": "atrium-hq-office-a-desk-1",
+      "roomId": "atrium-hq-office-a",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": -9.75,
+        "y": 0,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-a-desk-2",
+      "roomId": "atrium-hq-office-a",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": -5.25,
+        "y": 0,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-a-desk-3",
+      "roomId": "atrium-hq-office-a",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": -9.75,
+        "y": 0,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-a-desk-4",
+      "roomId": "atrium-hq-office-a",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": -5.25,
+        "y": 0,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-b-desk-1",
+      "roomId": "atrium-hq-office-b",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": 5.25,
+        "y": 0,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-b-desk-2",
+      "roomId": "atrium-hq-office-b",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": 9.75,
+        "y": 0,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-b-desk-3",
+      "roomId": "atrium-hq-office-b",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": 5.25,
+        "y": 0,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-b-desk-4",
+      "roomId": "atrium-hq-office-b",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": 9.75,
+        "y": 0,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-c-desk-1",
+      "roomId": "atrium-hq-office-c",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": -9.5,
+        "y": 4,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-c-desk-2",
+      "roomId": "atrium-hq-office-c",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": -4.5,
+        "y": 4,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-c-desk-3",
+      "roomId": "atrium-hq-office-c",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": -9.5,
+        "y": 4,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-c-desk-4",
+      "roomId": "atrium-hq-office-c",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": -4.5,
+        "y": 4,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-d-desk-1",
+      "roomId": "atrium-hq-office-d",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": 0.25,
+        "y": 4,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-d-desk-2",
+      "roomId": "atrium-hq-office-d",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": 4.75,
+        "y": 4,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-d-desk-3",
+      "roomId": "atrium-hq-office-d",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": 0.25,
+        "y": 4,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-d-desk-4",
+      "roomId": "atrium-hq-office-d",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": 4.75,
+        "y": 4,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-e-desk-1",
+      "roomId": "atrium-hq-office-e",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": -9.5,
+        "y": 4,
+        "z": -5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-e-desk-2",
+      "roomId": "atrium-hq-office-e",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": -4.5,
+        "y": 4,
+        "z": -5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-e-desk-3",
+      "roomId": "atrium-hq-office-e",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": -9.5,
+        "y": 4,
+        "z": -2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-e-desk-4",
+      "roomId": "atrium-hq-office-e",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": -4.5,
+        "y": 4,
+        "z": -2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-f-desk-1",
+      "roomId": "atrium-hq-office-f",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": 0.25,
+        "y": 4,
+        "z": -5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-f-desk-2",
+      "roomId": "atrium-hq-office-f",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": 4.75,
+        "y": 4,
+        "z": -5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-f-desk-3",
+      "roomId": "atrium-hq-office-f",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": 0.25,
+        "y": 4,
+        "z": -2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "atrium-hq-office-f-desk-4",
+      "roomId": "atrium-hq-office-f",
+      "buildingId": "atrium-hq",
+      "position": {
+        "x": 4.75,
+        "y": 4,
+        "z": -2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-a-desk-1",
+      "roomId": "forge-office-a",
+      "buildingId": "forge",
+      "position": {
+        "x": -9.75,
+        "y": 0,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-a-desk-2",
+      "roomId": "forge-office-a",
+      "buildingId": "forge",
+      "position": {
+        "x": -5.25,
+        "y": 0,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-a-desk-3",
+      "roomId": "forge-office-a",
+      "buildingId": "forge",
+      "position": {
+        "x": -9.75,
+        "y": 0,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-a-desk-4",
+      "roomId": "forge-office-a",
+      "buildingId": "forge",
+      "position": {
+        "x": -5.25,
+        "y": 0,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-b-desk-1",
+      "roomId": "forge-office-b",
+      "buildingId": "forge",
+      "position": {
+        "x": 5.25,
+        "y": 0,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-b-desk-2",
+      "roomId": "forge-office-b",
+      "buildingId": "forge",
+      "position": {
+        "x": 9.75,
+        "y": 0,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-b-desk-3",
+      "roomId": "forge-office-b",
+      "buildingId": "forge",
+      "position": {
+        "x": 5.25,
+        "y": 0,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-b-desk-4",
+      "roomId": "forge-office-b",
+      "buildingId": "forge",
+      "position": {
+        "x": 9.75,
+        "y": 0,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-c-desk-1",
+      "roomId": "forge-office-c",
+      "buildingId": "forge",
+      "position": {
+        "x": -9.5,
+        "y": 4,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-c-desk-2",
+      "roomId": "forge-office-c",
+      "buildingId": "forge",
+      "position": {
+        "x": -4.5,
+        "y": 4,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-c-desk-3",
+      "roomId": "forge-office-c",
+      "buildingId": "forge",
+      "position": {
+        "x": -9.5,
+        "y": 4,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-c-desk-4",
+      "roomId": "forge-office-c",
+      "buildingId": "forge",
+      "position": {
+        "x": -4.5,
+        "y": 4,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-d-desk-1",
+      "roomId": "forge-office-d",
+      "buildingId": "forge",
+      "position": {
+        "x": 0.25,
+        "y": 4,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-d-desk-2",
+      "roomId": "forge-office-d",
+      "buildingId": "forge",
+      "position": {
+        "x": 4.75,
+        "y": 4,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-d-desk-3",
+      "roomId": "forge-office-d",
+      "buildingId": "forge",
+      "position": {
+        "x": 0.25,
+        "y": 4,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-d-desk-4",
+      "roomId": "forge-office-d",
+      "buildingId": "forge",
+      "position": {
+        "x": 4.75,
+        "y": 4,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-e-desk-1",
+      "roomId": "forge-office-e",
+      "buildingId": "forge",
+      "position": {
+        "x": -9.5,
+        "y": 4,
+        "z": -5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-e-desk-2",
+      "roomId": "forge-office-e",
+      "buildingId": "forge",
+      "position": {
+        "x": -4.5,
+        "y": 4,
+        "z": -5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-e-desk-3",
+      "roomId": "forge-office-e",
+      "buildingId": "forge",
+      "position": {
+        "x": -9.5,
+        "y": 4,
+        "z": -2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-e-desk-4",
+      "roomId": "forge-office-e",
+      "buildingId": "forge",
+      "position": {
+        "x": -4.5,
+        "y": 4,
+        "z": -2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-f-desk-1",
+      "roomId": "forge-office-f",
+      "buildingId": "forge",
+      "position": {
+        "x": 0.25,
+        "y": 4,
+        "z": -5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-f-desk-2",
+      "roomId": "forge-office-f",
+      "buildingId": "forge",
+      "position": {
+        "x": 4.75,
+        "y": 4,
+        "z": -5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-f-desk-3",
+      "roomId": "forge-office-f",
+      "buildingId": "forge",
+      "position": {
+        "x": 0.25,
+        "y": 4,
+        "z": -2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "forge-office-f-desk-4",
+      "roomId": "forge-office-f",
+      "buildingId": "forge",
+      "position": {
+        "x": 4.75,
+        "y": 4,
+        "z": -2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-a-desk-1",
+      "roomId": "observatory-office-a",
+      "buildingId": "observatory",
+      "position": {
+        "x": -9.75,
+        "y": 0,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-a-desk-2",
+      "roomId": "observatory-office-a",
+      "buildingId": "observatory",
+      "position": {
+        "x": -5.25,
+        "y": 0,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-a-desk-3",
+      "roomId": "observatory-office-a",
+      "buildingId": "observatory",
+      "position": {
+        "x": -9.75,
+        "y": 0,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-a-desk-4",
+      "roomId": "observatory-office-a",
+      "buildingId": "observatory",
+      "position": {
+        "x": -5.25,
+        "y": 0,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-b-desk-1",
+      "roomId": "observatory-office-b",
+      "buildingId": "observatory",
+      "position": {
+        "x": 5.25,
+        "y": 0,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-b-desk-2",
+      "roomId": "observatory-office-b",
+      "buildingId": "observatory",
+      "position": {
+        "x": 9.75,
+        "y": 0,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-b-desk-3",
+      "roomId": "observatory-office-b",
+      "buildingId": "observatory",
+      "position": {
+        "x": 5.25,
+        "y": 0,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-b-desk-4",
+      "roomId": "observatory-office-b",
+      "buildingId": "observatory",
+      "position": {
+        "x": 9.75,
+        "y": 0,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-c-desk-1",
+      "roomId": "observatory-office-c",
+      "buildingId": "observatory",
+      "position": {
+        "x": -9.5,
+        "y": 4,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-c-desk-2",
+      "roomId": "observatory-office-c",
+      "buildingId": "observatory",
+      "position": {
+        "x": -4.5,
+        "y": 4,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-c-desk-3",
+      "roomId": "observatory-office-c",
+      "buildingId": "observatory",
+      "position": {
+        "x": -9.5,
+        "y": 4,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-c-desk-4",
+      "roomId": "observatory-office-c",
+      "buildingId": "observatory",
+      "position": {
+        "x": -4.5,
+        "y": 4,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-d-desk-1",
+      "roomId": "observatory-office-d",
+      "buildingId": "observatory",
+      "position": {
+        "x": 0.25,
+        "y": 4,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-d-desk-2",
+      "roomId": "observatory-office-d",
+      "buildingId": "observatory",
+      "position": {
+        "x": 4.75,
+        "y": 4,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-d-desk-3",
+      "roomId": "observatory-office-d",
+      "buildingId": "observatory",
+      "position": {
+        "x": 0.25,
+        "y": 4,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-d-desk-4",
+      "roomId": "observatory-office-d",
+      "buildingId": "observatory",
+      "position": {
+        "x": 4.75,
+        "y": 4,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-e-desk-1",
+      "roomId": "observatory-office-e",
+      "buildingId": "observatory",
+      "position": {
+        "x": -9.5,
+        "y": 4,
+        "z": -5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-e-desk-2",
+      "roomId": "observatory-office-e",
+      "buildingId": "observatory",
+      "position": {
+        "x": -4.5,
+        "y": 4,
+        "z": -5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-e-desk-3",
+      "roomId": "observatory-office-e",
+      "buildingId": "observatory",
+      "position": {
+        "x": -9.5,
+        "y": 4,
+        "z": -2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-e-desk-4",
+      "roomId": "observatory-office-e",
+      "buildingId": "observatory",
+      "position": {
+        "x": -4.5,
+        "y": 4,
+        "z": -2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-f-desk-1",
+      "roomId": "observatory-office-f",
+      "buildingId": "observatory",
+      "position": {
+        "x": 0.25,
+        "y": 4,
+        "z": -5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-f-desk-2",
+      "roomId": "observatory-office-f",
+      "buildingId": "observatory",
+      "position": {
+        "x": 4.75,
+        "y": 4,
+        "z": -5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-f-desk-3",
+      "roomId": "observatory-office-f",
+      "buildingId": "observatory",
+      "position": {
+        "x": 0.25,
+        "y": 4,
+        "z": -2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "observatory-office-f-desk-4",
+      "roomId": "observatory-office-f",
+      "buildingId": "observatory",
+      "position": {
+        "x": 4.75,
+        "y": 4,
+        "z": -2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-a-desk-1",
+      "roomId": "library-office-a",
+      "buildingId": "library",
+      "position": {
+        "x": -9.75,
+        "y": 0,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-a-desk-2",
+      "roomId": "library-office-a",
+      "buildingId": "library",
+      "position": {
+        "x": -5.25,
+        "y": 0,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-a-desk-3",
+      "roomId": "library-office-a",
+      "buildingId": "library",
+      "position": {
+        "x": -9.75,
+        "y": 0,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-a-desk-4",
+      "roomId": "library-office-a",
+      "buildingId": "library",
+      "position": {
+        "x": -5.25,
+        "y": 0,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-b-desk-1",
+      "roomId": "library-office-b",
+      "buildingId": "library",
+      "position": {
+        "x": 5.25,
+        "y": 0,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-b-desk-2",
+      "roomId": "library-office-b",
+      "buildingId": "library",
+      "position": {
+        "x": 9.75,
+        "y": 0,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-b-desk-3",
+      "roomId": "library-office-b",
+      "buildingId": "library",
+      "position": {
+        "x": 5.25,
+        "y": 0,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-b-desk-4",
+      "roomId": "library-office-b",
+      "buildingId": "library",
+      "position": {
+        "x": 9.75,
+        "y": 0,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-c-desk-1",
+      "roomId": "library-office-c",
+      "buildingId": "library",
+      "position": {
+        "x": -9.5,
+        "y": 4,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-c-desk-2",
+      "roomId": "library-office-c",
+      "buildingId": "library",
+      "position": {
+        "x": -4.5,
+        "y": 4,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-c-desk-3",
+      "roomId": "library-office-c",
+      "buildingId": "library",
+      "position": {
+        "x": -9.5,
+        "y": 4,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-c-desk-4",
+      "roomId": "library-office-c",
+      "buildingId": "library",
+      "position": {
+        "x": -4.5,
+        "y": 4,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-d-desk-1",
+      "roomId": "library-office-d",
+      "buildingId": "library",
+      "position": {
+        "x": 0.25,
+        "y": 4,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-d-desk-2",
+      "roomId": "library-office-d",
+      "buildingId": "library",
+      "position": {
+        "x": 4.75,
+        "y": 4,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-d-desk-3",
+      "roomId": "library-office-d",
+      "buildingId": "library",
+      "position": {
+        "x": 0.25,
+        "y": 4,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-d-desk-4",
+      "roomId": "library-office-d",
+      "buildingId": "library",
+      "position": {
+        "x": 4.75,
+        "y": 4,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-e-desk-1",
+      "roomId": "library-office-e",
+      "buildingId": "library",
+      "position": {
+        "x": -9.5,
+        "y": 4,
+        "z": -5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-e-desk-2",
+      "roomId": "library-office-e",
+      "buildingId": "library",
+      "position": {
+        "x": -4.5,
+        "y": 4,
+        "z": -5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-e-desk-3",
+      "roomId": "library-office-e",
+      "buildingId": "library",
+      "position": {
+        "x": -9.5,
+        "y": 4,
+        "z": -2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-e-desk-4",
+      "roomId": "library-office-e",
+      "buildingId": "library",
+      "position": {
+        "x": -4.5,
+        "y": 4,
+        "z": -2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-f-desk-1",
+      "roomId": "library-office-f",
+      "buildingId": "library",
+      "position": {
+        "x": 0.25,
+        "y": 4,
+        "z": -5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-f-desk-2",
+      "roomId": "library-office-f",
+      "buildingId": "library",
+      "position": {
+        "x": 4.75,
+        "y": 4,
+        "z": -5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-f-desk-3",
+      "roomId": "library-office-f",
+      "buildingId": "library",
+      "position": {
+        "x": 0.25,
+        "y": 4,
+        "z": -2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "library-office-f-desk-4",
+      "roomId": "library-office-f",
+      "buildingId": "library",
+      "position": {
+        "x": 4.75,
+        "y": 4,
+        "z": -2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-a-desk-1",
+      "roomId": "studio-office-a",
+      "buildingId": "studio",
+      "position": {
+        "x": -9.75,
+        "y": 0,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-a-desk-2",
+      "roomId": "studio-office-a",
+      "buildingId": "studio",
+      "position": {
+        "x": -5.25,
+        "y": 0,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-a-desk-3",
+      "roomId": "studio-office-a",
+      "buildingId": "studio",
+      "position": {
+        "x": -9.75,
+        "y": 0,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-a-desk-4",
+      "roomId": "studio-office-a",
+      "buildingId": "studio",
+      "position": {
+        "x": -5.25,
+        "y": 0,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-b-desk-1",
+      "roomId": "studio-office-b",
+      "buildingId": "studio",
+      "position": {
+        "x": 5.25,
+        "y": 0,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-b-desk-2",
+      "roomId": "studio-office-b",
+      "buildingId": "studio",
+      "position": {
+        "x": 9.75,
+        "y": 0,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-b-desk-3",
+      "roomId": "studio-office-b",
+      "buildingId": "studio",
+      "position": {
+        "x": 5.25,
+        "y": 0,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-b-desk-4",
+      "roomId": "studio-office-b",
+      "buildingId": "studio",
+      "position": {
+        "x": 9.75,
+        "y": 0,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-c-desk-1",
+      "roomId": "studio-office-c",
+      "buildingId": "studio",
+      "position": {
+        "x": -9.5,
+        "y": 4,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-c-desk-2",
+      "roomId": "studio-office-c",
+      "buildingId": "studio",
+      "position": {
+        "x": -4.5,
+        "y": 4,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-c-desk-3",
+      "roomId": "studio-office-c",
+      "buildingId": "studio",
+      "position": {
+        "x": -9.5,
+        "y": 4,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-c-desk-4",
+      "roomId": "studio-office-c",
+      "buildingId": "studio",
+      "position": {
+        "x": -4.5,
+        "y": 4,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-d-desk-1",
+      "roomId": "studio-office-d",
+      "buildingId": "studio",
+      "position": {
+        "x": 0.25,
+        "y": 4,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-d-desk-2",
+      "roomId": "studio-office-d",
+      "buildingId": "studio",
+      "position": {
+        "x": 4.75,
+        "y": 4,
+        "z": 2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-d-desk-3",
+      "roomId": "studio-office-d",
+      "buildingId": "studio",
+      "position": {
+        "x": 0.25,
+        "y": 4,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-d-desk-4",
+      "roomId": "studio-office-d",
+      "buildingId": "studio",
+      "position": {
+        "x": 4.75,
+        "y": 4,
+        "z": 5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-e-desk-1",
+      "roomId": "studio-office-e",
+      "buildingId": "studio",
+      "position": {
+        "x": -9.5,
+        "y": 4,
+        "z": -5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-e-desk-2",
+      "roomId": "studio-office-e",
+      "buildingId": "studio",
+      "position": {
+        "x": -4.5,
+        "y": 4,
+        "z": -5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-e-desk-3",
+      "roomId": "studio-office-e",
+      "buildingId": "studio",
+      "position": {
+        "x": -9.5,
+        "y": 4,
+        "z": -2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-e-desk-4",
+      "roomId": "studio-office-e",
+      "buildingId": "studio",
+      "position": {
+        "x": -4.5,
+        "y": 4,
+        "z": -2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-f-desk-1",
+      "roomId": "studio-office-f",
+      "buildingId": "studio",
+      "position": {
+        "x": 0.25,
+        "y": 4,
+        "z": -5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-f-desk-2",
+      "roomId": "studio-office-f",
+      "buildingId": "studio",
+      "position": {
+        "x": 4.75,
+        "y": 4,
+        "z": -5.63
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-f-desk-3",
+      "roomId": "studio-office-f",
+      "buildingId": "studio",
+      "position": {
+        "x": 0.25,
+        "y": 4,
+        "z": -2.88
+      },
+      "facing": 0
+    },
+    {
+      "id": "studio-office-f-desk-4",
+      "roomId": "studio-office-f",
+      "buildingId": "studio",
+      "position": {
+        "x": 4.75,
+        "y": 4,
+        "z": -2.88
+      },
+      "facing": 0
+    }
+  ],
+  "outdoorNodes": [
+    {
+      "id": "plaza-west",
+      "position": {
+        "x": -16,
+        "y": 0,
+        "z": 20
+      }
+    },
+    {
+      "id": "plaza-centre",
+      "position": {
+        "x": 4,
+        "y": 0,
+        "z": 20
+      }
+    },
+    {
+      "id": "plaza-east",
+      "position": {
+        "x": 24,
+        "y": 0,
+        "z": 20
+      }
+    },
+    {
+      "id": "plaza-north",
+      "position": {
+        "x": 4,
+        "y": 0,
+        "z": 32
+      }
+    },
+    {
+      "id": "lane-west",
+      "position": {
+        "x": -14,
+        "y": 0,
+        "z": 0
+      }
+    },
+    {
+      "id": "lane-west-south",
+      "position": {
+        "x": -14,
+        "y": 0,
+        "z": -28
+      }
+    },
+    {
+      "id": "lane-east",
+      "position": {
+        "x": 20,
+        "y": 0,
+        "z": 0
+      }
+    },
+    {
+      "id": "lane-east-south",
+      "position": {
+        "x": 20,
+        "y": 0,
+        "z": -28
+      }
+    },
+    {
+      "id": "gate:atrium-hq",
+      "position": {
+        "x": -28,
+        "y": 0,
+        "z": 7
+      }
+    },
+    {
+      "id": "gate:forge",
+      "position": {
+        "x": 4,
+        "y": 0,
+        "z": 7
+      }
+    },
+    {
+      "id": "gate:observatory",
+      "position": {
+        "x": 36,
+        "y": 0,
+        "z": 7
+      }
+    },
+    {
+      "id": "gate:library",
+      "position": {
+        "x": -14,
+        "y": 0,
+        "z": -33
+      }
+    },
+    {
+      "id": "gate:studio",
+      "position": {
+        "x": 26,
+        "y": 0,
+        "z": -33
+      }
+    }
+  ],
+  "outdoorEdges": [
+    {
+      "from": "gate:atrium-hq",
+      "to": "plaza-west"
+    },
+    {
+      "from": "plaza-west",
+      "to": "plaza-centre"
+    },
+    {
+      "from": "gate:forge",
+      "to": "plaza-centre"
+    },
+    {
+      "from": "gate:observatory",
+      "to": "plaza-east"
+    },
+    {
+      "from": "plaza-east",
+      "to": "plaza-centre"
+    },
+    {
+      "from": "plaza-centre",
+      "to": "plaza-north"
+    },
+    {
+      "from": "gate:library",
+      "to": "lane-west-south"
+    },
+    {
+      "from": "lane-west-south",
+      "to": "lane-west"
+    },
+    {
+      "from": "lane-west",
+      "to": "plaza-west"
+    },
+    {
+      "from": "gate:studio",
+      "to": "lane-east-south"
+    },
+    {
+      "from": "lane-east-south",
+      "to": "lane-east"
+    },
+    {
+      "from": "lane-east",
+      "to": "plaza-east"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: node devtools/release-check.mjs ${{ github.ref_name }}
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: |
+          cd dist
+          zip -r "../ananta-atrium-${GITHUB_REF_NAME#v}.zip" .
+          cd ..
+          zip -j "ananta-atrium-${GITHUB_REF_NAME#v}.zip" LICENSE ATTRIBUTION.md
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: ananta-atrium-*.zip
+          generate_release_notes: true

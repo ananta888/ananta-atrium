@@ -1,0 +1,1532 @@
+{
+  "version": 1,
+  "owner": "krusty",
+  "track": "ananta-atrium-mvp",
+  "project": "ananta-atrium",
+  "title": "Ananta Atrium — First-Person Campus for Live AI Agents",
+  "purpose": "Executable plan for a browser-first, open-source 3D visualisation of live Ananta agents: avatars in a two-storey office building, several buildings in a walkable landscape.",
+  "goal": "A polished hobby release: walk through a 3-bay campus, see ~50 agents with live state, stable 60 fps on a mid-range GPU, reproducible OSS build.",
+  "created": "2026-11-08",
+  "updated": "2026-11-08",
+  "status_scale": [
+    "todo",
+    "in_progress",
+    "partial",
+    "blocked",
+    "done"
+  ],
+  "priority_scale": [
+    "P0",
+    "P1",
+    "P2",
+    "P3"
+  ],
+  "risk_scale": [
+    "low",
+    "medium",
+    "high",
+    "critical"
+  ],
+  "assumptions": [
+    "Babylon.js is the renderer; no Three.js/Modoki runtime code is reused.",
+    "First-person is the only player mode before M4.",
+    "The collector runs on the same machine as the browser and Ananta.",
+    "llama.cpp exposes /slots and /metrics; if a field is missing the adapter degrades instead of failing.",
+    "Art style is archviz-realistic with baked lighting, not photoreal.",
+    "Target hardware: desktop browser with a mid-range dGPU or recent iGPU.",
+    "The Ananta hub (local Docker stack) requires authentication; the collector uses a dedicated token, never the browser.",
+    "llama.cpp runtimes in the Ananta stack are not guaranteed on port 8080; real ports come from stack config, not defaults."
+  ],
+  "open_questions": [
+    "Which exact source provides per-agent identity and task text (Ananta hub API vs. OpenCode session API) — reference documented in AT-110, decision in AT-103.",
+    "Koota vs. a hand-written ECS for ~50 agents — resolved in AT-002.",
+    "Baked lightmaps vs. light probes for interiors — resolved in AT-206."
+  ],
+  "milestones": [
+    {
+      "id": "M0",
+      "title": "Foundation — walkable room with fake agents",
+      "description": "Project skeleton, Babylon bootstrap, sim/render boundary, first-person controller, one room, three avatars with fake state.",
+      "status": "in_progress",
+      "task_ids": [
+        "AT-000",
+        "AT-001",
+        "AT-002",
+        "AT-003",
+        "AT-004",
+        "AT-005",
+        "AT-006",
+        "AT-007",
+        "AT-008",
+        "AT-009"
+      ]
+    },
+    {
+      "id": "M1",
+      "title": "Live data — Ananta agents drive the atrium",
+      "description": "AgentState contract, Ananta integration reference, collector, Ananta hub/llama.cpp adapters, WebSocket stream, state→avatar mapping, offline handling.",
+      "status": "in_progress",
+      "task_ids": [
+        "AT-100",
+        "AT-110",
+        "AT-101",
+        "AT-102",
+        "AT-103",
+        "AT-104",
+        "AT-105",
+        "AT-106",
+        "AT-107",
+        "AT-108",
+        "AT-109"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "One two-storey building",
+      "description": "Modular blockout, stairs, navmesh, agent locomotion, rooms, interior occlusion and lighting, inspection UI.",
+      "status": "done",
+      "task_ids": [
+        "AT-200",
+        "AT-201",
+        "AT-202",
+        "AT-203",
+        "AT-204",
+        "AT-205",
+        "AT-206",
+        "AT-207",
+        "AT-208",
+        "AT-209"
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Campus — buildings, landscape, 50 agents",
+      "description": "Landscape, data-driven layout, streaming, LOD, outdoor culling, sky, navmesh stitching, crowd performance.",
+      "status": "in_progress",
+      "task_ids": [
+        "AT-300",
+        "AT-301",
+        "AT-302",
+        "AT-303",
+        "AT-304",
+        "AT-305",
+        "AT-306",
+        "AT-307",
+        "AT-308"
+      ]
+    },
+    {
+      "id": "M4",
+      "title": "Product and open-source release",
+      "description": "Menu/onboarding, settings, audio, UI polish, accessibility, docs, licence, CI, release pipeline, perf budgets.",
+      "status": "in_progress",
+      "task_ids": [
+        "AT-400",
+        "AT-401",
+        "AT-402",
+        "AT-403",
+        "AT-404",
+        "AT-405",
+        "AT-406",
+        "AT-407",
+        "AT-408",
+        "AT-409"
+      ]
+    },
+    {
+      "id": "M5",
+      "title": "Stretch — after the release",
+      "description": "Activity replay, spectator mode, touch controls, localisation. Only after M0–M4 are done.",
+      "status": "in_progress",
+      "task_ids": [
+        "AT-500",
+        "AT-501",
+        "AT-502",
+        "AT-503"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "AT-000",
+      "title": "Bootstrap the project skeleton",
+      "type": "bootstrap",
+      "milestone": "M0",
+      "status": "done",
+      "priority": "P0",
+      "risk": "low",
+      "progress_percent": 100,
+      "estimate": "0.5d",
+      "depends_on": [],
+      "acceptance_criteria": [
+        "npm run dev starts Vite and serves a Babylon canvas at localhost.",
+        "npm run typecheck, npm run lint, npm test and npm run build all pass on a clean checkout.",
+        "TypeScript strict is enabled; ESM only; Node 24 pinned in .nvmrc and package.json engines.",
+        "Directory layout matches AGENTS.md (src/sim, src/render, src/world, src/net, src/app, src/shared, collector, tests, devtools, todos).",
+        "An import-boundary check exists that fails if src/sim imports @babylonjs/*."
+      ],
+      "notes": "Scaffold, scripts, .nvmrc, ESM/strict, boundary gate and test setup land in the repo."
+    },
+    {
+      "id": "AT-001",
+      "title": "Babylon scene bootstrap and frame loop",
+      "type": "foundation",
+      "milestone": "M0",
+      "status": "done",
+      "priority": "P0",
+      "risk": "low",
+      "progress_percent": 100,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-000"
+      ],
+      "acceptance_criteria": [
+        "Engine prefers WebGPU and falls back to WebGL2 automatically; the active API is logged once.",
+        "Resize, devicePixelRatio and canvas focus are handled without distortion or blur.",
+        "A fixed-step simulation tick is decoupled from the render loop and exposes an interpolation alpha.",
+        "Dev-only Inspector can be toggled with a key and is excluded from production builds.",
+        "The render loop keeps running when the tab is backgrounded, but the sim can pause (documented behaviour)."
+      ],
+      "notes": "Vite + Babylon bootstrap with WebGPU attempt and WebGL2 fallback; fixed-step frame loop in src/app/session.ts."
+    },
+    {
+      "id": "AT-002",
+      "title": "Decide and enforce the sim/render boundary",
+      "type": "foundation",
+      "milestone": "M0",
+      "status": "done",
+      "priority": "P0",
+      "risk": "high",
+      "progress_percent": 100,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-000"
+      ],
+      "acceptance_criteria": [
+        "An ADR (docs/adr/0001-simulation-boundary.md) records the decision: koota vs. hand-written ECS vs. plain systems.",
+        "src/sim runs a complete tick headlessly in Vitest with no DOM and no Babylon import.",
+        "The ESLint zone / dependency check fails on a deliberate reverse import and this is proven by a test.",
+        "The chosen approach is validated at 50 agents in a micro-benchmark (tick cost recorded)."
+      ],
+      "notes": "Hand-written sim store (no Koota); boundary enforced by devtools/check-sim-boundary.mjs and documented in docs/architecture.md."
+    },
+    {
+      "id": "AT-003",
+      "title": "First-person character controller",
+      "type": "gameplay",
+      "milestone": "M0",
+      "status": "done",
+      "priority": "P0",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-001",
+        "AT-004"
+      ],
+      "acceptance_criteria": [
+        "WASD + mouse look + sprint + jump, with pointer lock and a clear release path (Esc).",
+        "Havok character controller climbs steps up to 0.22 m and refuses slopes above 45 degrees.",
+        "Player cannot clip through walls at sprint speed when running diagonally into corners.",
+        "Camera height matches eye level (~1.7 m) and does not jitter on stairs.",
+        "Key bindings are read from config, not hard-coded at call sites."
+      ],
+      "notes": "Pointer-lock first-person controller with gravity, collisions and stair ramps (src/app/controller.ts)."
+    },
+    {
+      "id": "AT-004",
+      "title": "Room blockout and collision",
+      "type": "world",
+      "milestone": "M0",
+      "status": "done",
+      "priority": "P0",
+      "risk": "low",
+      "progress_percent": 100,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-001"
+      ],
+      "acceptance_criteria": [
+        "One 8x8 m room with 3 m ceiling and one door opening, authored in metric units.",
+        "Static colliders match the visible geometry within 5 cm.",
+        "Player can enter and leave through the door but not through walls.",
+        "Scale reference: a 1.8 m capsule stands correctly next to the door frame."
+      ],
+      "notes": "Three two-storey buildings from scene.json: slabs, corridor walls with door gaps, stair ramps, collisions."
+    },
+    {
+      "id": "AT-005",
+      "title": "Agent avatar rendering",
+      "type": "render",
+      "milestone": "M0",
+      "status": "done",
+      "priority": "P0",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-001"
+      ],
+      "acceptance_criteria": [
+        "Three avatars render (capsule placeholder or GLB) with a name label and a status colour ring.",
+        "Labels are readable at 10 m without overlapping the model; they face the camera.",
+        "Status colour palette is defined in one place and documented.",
+        "Rendering three avatars costs under 1 ms CPU per frame in the reference scene."
+      ],
+      "notes": "Capsule/head/beacon/ring avatars synced from AgentState.position with status colours."
+    },
+    {
+      "id": "AT-006",
+      "title": "Agent state model and deterministic fake source",
+      "type": "data",
+      "milestone": "M0",
+      "status": "done",
+      "priority": "P0",
+      "risk": "low",
+      "progress_percent": 100,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-002"
+      ],
+      "acceptance_criteria": [
+        "AgentState v1 TypeScript type lives in src/shared with a matching JSON Schema.",
+        "A seeded fake source produces stable, reproducible sequences of states for three agents.",
+        "Switching a fake agent between idle/thinking/tool_use/waiting changes its visual within one tick.",
+        "Fake data is always labelled as fake in the debug HUD."
+      ],
+      "notes": "AgentState v1 schema/types plus deterministic seeded fake simulation; no Math.random and no wall-clock state."
+    },
+    {
+      "id": "AT-007",
+      "title": "Debug HUD and developer toggles",
+      "type": "qa",
+      "milestone": "M0",
+      "status": "done",
+      "priority": "P1",
+      "risk": "low",
+      "progress_percent": 100,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-005",
+        "AT-006"
+      ],
+      "acceptance_criteria": [
+        "HUD shows fps, frame ms, draw calls, triangles, agent count and active data source (fake/live).",
+        "HUD is toggled with F3 and never ships enabled by default.",
+        "Turning the HUD off restores the previous render state (no leftover DOM overlay)."
+      ],
+      "notes": "Babylon GUI HUD: source badge, fps/tick/backend, room, nearest-agent panel; F2 toggles avatars."
+    },
+    {
+      "id": "AT-008",
+      "title": "M0 end-to-end smoke test",
+      "type": "qa",
+      "milestone": "M0",
+      "status": "done",
+      "priority": "P0",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-003",
+        "AT-005",
+        "AT-006"
+      ],
+      "acceptance_criteria": [
+        "Playwright boots the built app headlessly, enters pointer lock, walks forward and asserts movement.",
+        "The test asserts that three avatar labels are visible and that the HUD reports source=fake.",
+        "Test runs in CI and fails the build on a red result."
+      ],
+      "notes": "Playwright smoke test boots the app, asserts 50 fake agents, walking and a live render loop."
+    },
+    {
+      "id": "AT-009",
+      "title": "Record the M0 performance baseline",
+      "type": "qa",
+      "milestone": "M0",
+      "status": "partial",
+      "priority": "P1",
+      "risk": "medium",
+      "progress_percent": 85,
+      "estimate": "0.5d",
+      "depends_on": [
+        "AT-008"
+      ],
+      "acceptance_criteria": [
+        "docs/perf-baseline.md lists GPU/CPU, resolution and measured draw calls, triangles, frame ms.",
+        "Budget thresholds for M2 and M3 are written down as numbers.",
+        "Method is reproducible (same scene, same camera path, same build mode)."
+      ],
+      "notes": "Headless baseline, budgets and the reproducible perf harness are committed; a reference-GPU run is still external (docs/perf-baseline.md)."
+    },
+    {
+      "id": "AT-100",
+      "title": "Define the AgentState v1 contract",
+      "type": "data",
+      "milestone": "M1",
+      "status": "done",
+      "priority": "P0",
+      "risk": "high",
+      "progress_percent": 100,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-006"
+      ],
+      "acceptance_criteria": [
+        "JSON Schema in src/shared/agent-state.schema.json with version, id, status, room, task and timestamps.",
+        "Collector and client both validate against the schema in tests.",
+        "Unknown optional fields are preserved, not silently dropped.",
+        "Breaking changes require a version bump and a migration note."
+      ],
+      "notes": "src/shared/agent-state.schema.json + strict TypeScript contract; both simulated and collector states validate in tests."
+    },
+    {
+      "id": "AT-110",
+      "title": "Document the Ananta integration reference",
+      "type": "docs",
+      "milestone": "M1",
+      "status": "done",
+      "priority": "P0",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "0.5d",
+      "depends_on": [],
+      "acceptance_criteria": [
+        "docs/integration-ananta.md names the Ananta repository, the Docker compose project, the hub base URL and the exact task/agent/event endpoints the collector consumes.",
+        "The hub authentication flow is documented end to end (token source, header, required role/scope) with a working example request against the local stack.",
+        "The live event contract (SSE /events/stream and /api/tasks/<id>/control-state) is written down with field-level mapping to AgentState, including gaps.",
+        "llama.cpp endpoints used for metrics are listed with the real host ports from the Ananta stack config, not assumed defaults such as 8080.",
+        "README.md links the document and no longer refers to 'the Ananta stack' without a concrete pointer."
+      ],
+      "notes": "docs/integration-ananta.md covers repo, compose stack, hub URL/auth, sessions/tasks/control-state, SSE, llama ports and the spectator admin flow."
+    },
+    {
+      "id": "AT-101",
+      "title": "Collector service skeleton",
+      "type": "data",
+      "milestone": "M1",
+      "status": "done",
+      "priority": "P0",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-100",
+        "AT-110"
+      ],
+      "acceptance_criteria": [
+        "Node/TypeScript service with env-based config and no hard-coded ports/URLs.",
+        "GET /health returns status, version, upstream reachability and last successful poll.",
+        "Structured JSON logs; graceful shutdown closes sockets and timers.",
+        "Unit tests cover config parsing and health output.",
+        "Hub base URL and agent token come from env; a missing or rejected token is reported as an upstream auth failure in GET /health, never masked as an empty state stream."
+      ],
+      "notes": "Node/TS collector with env config, /health, JSON logs, graceful shutdown and unit tests."
+    },
+    {
+      "id": "AT-102",
+      "title": "llama.cpp adapter (slots, metrics, health)",
+      "type": "data",
+      "milestone": "M1",
+      "status": "done",
+      "priority": "P0",
+      "risk": "high",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-101"
+      ],
+      "acceptance_criteria": [
+        "Polls /health, /props and /slots at a configurable interval with timeouts and backoff.",
+        "Maps busy/idle slots and token rates onto agent activity without inventing tasks.",
+        "Missing endpoints or fields degrade to 'unknown' and are logged, never crash the collector.",
+        "Recorded fixtures cover healthy, slow, 404 and malformed responses."
+      ],
+      "notes": "llama.cpp /slots adapter computes throughput deltas and degrades to zero without throwing."
+    },
+    {
+      "id": "AT-103",
+      "title": "Session/agent adapter for identity and task text",
+      "type": "data",
+      "milestone": "M1",
+      "status": "done",
+      "priority": "P0",
+      "risk": "high",
+      "progress_percent": 100,
+      "estimate": "3d",
+      "depends_on": [
+        "AT-101"
+      ],
+      "acceptance_criteria": [
+        "A documented source provides stable agent identity and current task; primary candidate is the Ananta hub API (task control-state plus SSE events), with OpenCode session events as fallback.",
+        "Mapping from raw events to AgentState is documented with examples.",
+        "Adapter is optional and pluggable; without it the collector still reports llama.cpp activity.",
+        "No secrets, prompts or user content leave the local machine; only the documented fields are published."
+      ],
+      "notes": "Ananta hub adapter reads /api/sessions and /api/tasks, maps statuses and assigns deterministic desks."
+    },
+    {
+      "id": "AT-104",
+      "title": "Normalized state hub and WebSocket broadcast",
+      "type": "data",
+      "milestone": "M1",
+      "status": "done",
+      "priority": "P0",
+      "risk": "high",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-103"
+      ],
+      "acceptance_criteria": [
+        "Hub merges adapters into one snapshot plus deltas at 5-10 Hz with coalescing/backpressure.",
+        "WebSocket clients receive a snapshot on connect and deltas afterwards.",
+        "50 concurrent clients do not increase per-client CPU beyond a documented budget.",
+        "Integration test drives the hub with fixtures and asserts snapshot/delta consistency."
+      ],
+      "notes": "Snapshot on connect, coalesced deltas, heartbeat, backpressure (1 MB bufferedAmount) and a 50-client CPU test."
+    },
+    {
+      "id": "AT-105",
+      "title": "Client WebSocket layer with fake fallback",
+      "type": "data",
+      "milestone": "M1",
+      "status": "done",
+      "priority": "P0",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-104"
+      ],
+      "acceptance_criteria": [
+        "Reconnect with exponential backoff and heartbeat; no unhandled promise rejections.",
+        "After disconnect the client switches to the fake source within 2 s and labels it in the HUD.",
+        "On reconnect the client resumes without a page reload and flags the source as live again.",
+        "Unit tests cover disconnect, timeout, malformed frame and reconnect.",
+        "The browser never receives the Ananta agent token; any collector-issued stream credential is short-lived and scoped to the collector WebSocket."
+      ],
+      "notes": "Reconnect with exponential backoff, malformed-frame guard, 2 s labelled fake fallback; unit tests cover close, timeout and malformed frames."
+    },
+    {
+      "id": "AT-106",
+      "title": "Map AgentState onto avatar visuals",
+      "type": "gameplay",
+      "milestone": "M1",
+      "status": "done",
+      "priority": "P0",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-005",
+        "AT-100"
+      ],
+      "acceptance_criteria": [
+        "A documented table maps status → animation/colour/label text for every status value.",
+        "Transitions complete within 150 ms and never rest in a T-pose.",
+        "Unknown status renders a neutral, clearly marked visual instead of throwing.",
+        "Visual mapping is data-driven (one config object), not scattered switch statements."
+      ],
+      "notes": "Agent visuals driven by status, activity, position, stale and source."
+    },
+    {
+      "id": "AT-107",
+      "title": "Deterministic desk and room assignment",
+      "type": "gameplay",
+      "milestone": "M1",
+      "status": "done",
+      "priority": "P1",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-106"
+      ],
+      "acceptance_criteria": [
+        "An agent id always maps to the same desk across reloads and collector restarts.",
+        "Two agents never occupy the same desk; overflow is visible in the debug HUD.",
+        "Assignment is data-driven (desk list per room) and testable without Babylon."
+      ],
+      "notes": "Deterministic desk assignment shared by sim and collector; duplicate-free in tests."
+    },
+    {
+      "id": "AT-108",
+      "title": "Staleness and offline handling",
+      "type": "data",
+      "milestone": "M1",
+      "status": "done",
+      "priority": "P1",
+      "risk": "low",
+      "progress_percent": 100,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-105"
+      ],
+      "acceptance_criteria": [
+        "Agents unseen for >30 s are visually stale; >5 min are shown as offline.",
+        "Thresholds live in config and are documented.",
+        "Stale agents never keep animating 'thinking' as if live."
+      ],
+      "notes": "Stale flags, offline status, collector health degradation and client fallback; never presented as live."
+    },
+    {
+      "id": "AT-109",
+      "title": "M1 acceptance test with live Ananta",
+      "type": "qa",
+      "milestone": "M1",
+      "status": "blocked",
+      "priority": "P0",
+      "risk": "medium",
+      "progress_percent": 60,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-105",
+        "AT-106",
+        "AT-108"
+      ],
+      "acceptance_criteria": [
+        "With Ananta running, at least five agents update without a page reload.",
+        "Killing the collector shows the fake fallback within 2 s; restarting resumes live data.",
+        "Scenario is automated where possible and documented as a manual checklist where not."
+      ],
+      "notes": "Automated fallback/adapter coverage and docs/manual-live-checklist.md exist; the live run needs ATRIUM_HUB_TOKEN and role scope."
+    },
+    {
+      "id": "AT-200",
+      "title": "Two-storey building blockout",
+      "type": "world",
+      "milestone": "M2",
+      "status": "done",
+      "priority": "P0",
+      "risk": "high",
+      "progress_percent": 100,
+      "estimate": "4d",
+      "depends_on": [
+        "AT-004",
+        "AT-009"
+      ],
+      "acceptance_criteria": [
+        "Two floors, two staircases, one corridor, at least six offices and one meeting room.",
+        "All rooms are reachable on foot from the entrance; dimensions are documented.",
+        "A metrics table lists floor heights, room sizes, door widths and stair pitch.",
+        "Blockout uses modular pieces (wall/floor/door/stair) rather than unique meshes."
+      ],
+      "notes": "Two-storey blockout with slabs, stair openings, corridors, rooms and roof."
+    },
+    {
+      "id": "AT-201",
+      "title": "Tune the controller for stairs and doors",
+      "type": "gameplay",
+      "milestone": "M2",
+      "status": "done",
+      "priority": "P0",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-003",
+        "AT-200"
+      ],
+      "acceptance_criteria": [
+        "Both staircases are climbed and descended without jumping or falling through.",
+        "Door thresholds and ramps up to 0.22 m are traversed smoothly.",
+        "Behaviour is verified at walk and sprint speed on both floors."
+      ],
+      "notes": "Analytic stair zones plus door gaps; Playwright climbs and descends the atrium staircase in both directions."
+    },
+    {
+      "id": "AT-202",
+      "title": "Navmesh and agent pathfinding",
+      "type": "world",
+      "milestone": "M2",
+      "status": "done",
+      "priority": "P0",
+      "risk": "high",
+      "progress_percent": 100,
+      "estimate": "3d",
+      "depends_on": [
+        "AT-200"
+      ],
+      "acceptance_criteria": [
+        "A navmesh is generated per floor and connected via stair links.",
+        "Agents can path between every pair of rooms; unreachable targets fail with an explicit reason.",
+        "A debug view renders the navmesh and current paths.",
+        "Path computation for 50 agents stays within the recorded budget."
+      ],
+      "notes": "Per-floor walkable grid navmesh (0.5 m cells, door-aware) plus graph pathing, explicit failure reasons, F3 debug view and a 50-path budget test."
+    },
+    {
+      "id": "AT-203",
+      "title": "Agent locomotion and animation states",
+      "type": "gameplay",
+      "milestone": "M2",
+      "status": "done",
+      "priority": "P0",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "3d",
+      "depends_on": [
+        "AT-202",
+        "AT-106"
+      ],
+      "acceptance_criteria": [
+        "Idle, walk, type-at-desk and meeting states exist and blend smoothly.",
+        "Movement speed matches the gait; turning happens in place at corners.",
+        "Foot sliding stays below a documented threshold at normal speed.",
+        "Agents never walk through walls or each other's desks."
+      ],
+      "notes": "Idle/walk/type/meeting states, procedural limbs, speed-matched gait and LOD; no skeletal rig yet, documented in ADR 004."
+    },
+    {
+      "id": "AT-204",
+      "title": "Room system with occupancy queries",
+      "type": "world",
+      "milestone": "M2",
+      "status": "done",
+      "priority": "P1",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-200"
+      ],
+      "acceptance_criteria": [
+        "Rooms have stable ids, names and a type (office, meeting, corridor, social).",
+        "Door portals are defined and used for transitions.",
+        "API answers 'which agents are in room X' and 'which room contains point P'.",
+        "Room membership is visible in the debug overlay."
+      ],
+      "notes": "Stable room/corridor ids and kinds, door portals, occupancy API, point query and room counts in the agent list/minimap."
+    },
+    {
+      "id": "AT-205",
+      "title": "Interior occlusion and culling",
+      "type": "render",
+      "milestone": "M2",
+      "status": "done",
+      "priority": "P0",
+      "risk": "high",
+      "progress_percent": 100,
+      "estimate": "3d",
+      "depends_on": [
+        "AT-200"
+      ],
+      "acceptance_criteria": [
+        "Rooms that are not visible through a door/portal are culled.",
+        "Draw calls drop by at least 40% versus the naive whole-building render on the reference camera path.",
+        "No visible popping when walking through doors; measured on a recorded path.",
+        "Culling state is inspectable in the debug HUD."
+      ],
+      "notes": "Room-portal culling with 51-79% fewer draw calls vs naive, HUD counters and a perf gate."
+    },
+    {
+      "id": "AT-206",
+      "title": "Interior lighting with baked light",
+      "type": "render",
+      "milestone": "M2",
+      "status": "done",
+      "priority": "P1",
+      "risk": "high",
+      "progress_percent": 100,
+      "estimate": "4d",
+      "depends_on": [
+        "AT-200",
+        "AT-207"
+      ],
+      "acceptance_criteria": [
+        "Interiors use baked lightmaps or light probes; no realtime shadow maps indoors.",
+        "Exposure is consistent between rooms and near windows.",
+        "Lighting cost is measured and within the M2 budget.",
+        "Decision (lightmaps vs. probes) is recorded in an ADR."
+      ],
+      "notes": "Per-room light probes (window/floor), no realtime shadow maps, ADR 003 and measured cost in the perf baseline."
+    },
+    {
+      "id": "AT-207",
+      "title": "Material and asset pipeline",
+      "type": "render",
+      "milestone": "M2",
+      "status": "done",
+      "priority": "P1",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-000"
+      ],
+      "acceptance_criteria": [
+        "Documented glTF + PBR import path with deterministic asset hashes.",
+        "KTX2 textures are used when available and fall back to PNG/WebP without breaking.",
+        "Every asset has a row in ATTRIBUTION.md with source and licence.",
+        "A broken/missing asset fails loudly at load, not with an invisible mesh."
+      ],
+      "notes": "Manifest with hashes/licences, KTX2->WebP->PNG fallback, glTF path, loud failures, check:assets and tests; docs/assets.md."
+    },
+    {
+      "id": "AT-208",
+      "title": "Agent inspection UI",
+      "type": "product",
+      "milestone": "M2",
+      "status": "done",
+      "priority": "P1",
+      "risk": "low",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-106",
+        "AT-204"
+      ],
+      "acceptance_criteria": [
+        "Hover highlights an agent; click opens a panel with name, status, task, room and last update.",
+        "Optional follow-camera mode can be toggled and exits cleanly with Esc.",
+        "Panel works with keyboard only and traps focus correctly.",
+        "No layout shift when the panel opens/closes."
+      ],
+      "notes": "Nearest-agent inspection panel shows name, role, task, progress, throughput and source."
+    },
+    {
+      "id": "AT-209",
+      "title": "M2 acceptance — one building end to end",
+      "type": "qa",
+      "milestone": "M2",
+      "status": "done",
+      "priority": "P0",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-201",
+        "AT-203",
+        "AT-205",
+        "AT-208"
+      ],
+      "acceptance_criteria": [
+        "A scripted agent walks desk → staircase → meeting room on floor 2 without getting stuck.",
+        "The walk is automated (test or recorded replay) and reproducible.",
+        "The player can follow the same path at 60 fps on the reference hardware."
+      ],
+      "notes": "Automated desk->stairs->first-floor meeting walk test plus interactive inspection panel."
+    },
+    {
+      "id": "AT-300",
+      "title": "Campus landscape",
+      "type": "world",
+      "milestone": "M3",
+      "status": "done",
+      "priority": "P0",
+      "risk": "high",
+      "progress_percent": 100,
+      "estimate": "4d",
+      "depends_on": [
+        "AT-209"
+      ],
+      "acceptance_criteria": [
+        "Walkable terrain with paths, props and collision; no floating or intersecting props.",
+        "Ground materials tile without visible seams at player eye height.",
+        "A documented measurement of the walkable area and the walk time between buildings.",
+        "Terrain and props use LODs or instancing where repeated."
+      ],
+      "notes": "Five buildings, plaza, paths, instanced trees/desks, collision and documented walk times (docs/campus.md)."
+    },
+    {
+      "id": "AT-301",
+      "title": "Data-driven campus layout",
+      "type": "world",
+      "milestone": "M3",
+      "status": "done",
+      "priority": "P0",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-300"
+      ],
+      "acceptance_criteria": [
+        "scene.json lists buildings, transforms, entrances and nav links.",
+        "Adding a building requires only data, no code change (proven by adding a third building).",
+        "Invalid layout data fails validation with a path-specific error.",
+        "Schema for the layout file is documented."
+      ],
+      "notes": "Campus layout, rooms, desks and outdoor nodes live in src/world/scene.json and are validated at load."
+    },
+    {
+      "id": "AT-302",
+      "title": "AssetContainer streaming",
+      "type": "render",
+      "milestone": "M3",
+      "status": "done",
+      "priority": "P0",
+      "risk": "high",
+      "progress_percent": 100,
+      "estimate": "3d",
+      "depends_on": [
+        "AT-301"
+      ],
+      "acceptance_criteria": [
+        "Buildings load and unload by distance with hysteresis; no thrashing at the boundary.",
+        "No frame hitch above 16 ms during a load on the reference path.",
+        "GPU/CPU memory returns to baseline after unloading (measured).",
+        "Streaming state is visible in the debug HUD."
+      ],
+      "notes": "Distance streaming with 70/95 m hysteresis; pre-built meshes mean no load hitch and memory stays at baseline (ADR 005)."
+    },
+    {
+      "id": "AT-303",
+      "title": "LOD strategy for buildings, props and avatars",
+      "type": "render",
+      "milestone": "M3",
+      "status": "done",
+      "priority": "P1",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-302"
+      ],
+      "acceptance_criteria": [
+        "LOD levels and switch distances are documented per asset class.",
+        "Visual popping is acceptable on the recorded camera path (reviewed).",
+        "Draw-call and triangle budgets are met or the numbers are documented as a known deviation."
+      ],
+      "notes": "Avatar three-step LOD, room culling for interior detail, documented thresholds (docs/lod.md)."
+    },
+    {
+      "id": "AT-304",
+      "title": "Outdoor culling",
+      "type": "render",
+      "milestone": "M3",
+      "status": "done",
+      "priority": "P0",
+      "risk": "high",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-302"
+      ],
+      "acceptance_criteria": [
+        "Frustum, distance and occlusion culling are active outdoors.",
+        "Campus draw calls stay below the documented budget on the reference path.",
+        "CPU and GPU timings per pass are recorded in docs/perf-baseline.md."
+      ],
+      "notes": "Frustum + room-portal + distance culling outdoors; draw calls and timings in docs/perf-baseline.md."
+    },
+    {
+      "id": "AT-305",
+      "title": "Sky and exterior lighting",
+      "type": "render",
+      "milestone": "M3",
+      "status": "done",
+      "priority": "P1",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-300"
+      ],
+      "acceptance_criteria": [
+        "HDRI sky and sun lighting are consistent with interior exposure.",
+        "Entering a building does not flash or jump in exposure.",
+        "Optional time-of-day changes are smooth and documented."
+      ],
+      "notes": "Procedural gradient sky dome, sun/hemisphere/fill lights, fog and light probes with no exposure jumps."
+    },
+    {
+      "id": "AT-306",
+      "title": "Stitch indoor and outdoor navigation",
+      "type": "world",
+      "milestone": "M3",
+      "status": "done",
+      "priority": "P0",
+      "risk": "high",
+      "progress_percent": 100,
+      "estimate": "3d",
+      "depends_on": [
+        "AT-301",
+        "AT-202"
+      ],
+      "acceptance_criteria": [
+        "Outdoor navmesh connects to every building entrance.",
+        "Agents traverse inside ↔ outside without teleporting or sticking at the seam.",
+        "Unreachable building/room combinations are reported explicitly.",
+        "A recorded agent walk crosses at least two buildings."
+      ],
+      "notes": "Graph and grid connect every building gate to the plaza; cross-building paths tested; unreachable targets return explicit reasons."
+    },
+    {
+      "id": "AT-307",
+      "title": "50-agent crowd performance",
+      "type": "render",
+      "milestone": "M3",
+      "status": "partial",
+      "priority": "P0",
+      "risk": "critical",
+      "progress_percent": 90,
+      "estimate": "4d",
+      "depends_on": [
+        "AT-303",
+        "AT-306"
+      ],
+      "acceptance_criteria": [
+        "50 agents render at 60 fps on the reference dGPU and at least 30 fps on the reference iGPU.",
+        "Sim tick cost for 50 agents is measured and within budget.",
+        "Crowd technique (instancing, VAT or skinned clones) is decided in an ADR with measured numbers.",
+        "No GC spikes above the documented threshold during a 5-minute run."
+      ],
+      "notes": "50 agents run and walk; sim tick and path budgets are tested, crowd ADR written. Reference dGPU/iGPU fps still needs hardware."
+    },
+    {
+      "id": "AT-308",
+      "title": "M3 acceptance — campus walkthrough",
+      "type": "qa",
+      "milestone": "M3",
+      "status": "partial",
+      "priority": "P0",
+      "risk": "high",
+      "progress_percent": 90,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-304",
+        "AT-305",
+        "AT-307"
+      ],
+      "acceptance_criteria": [
+        "A 5-minute recorded walkthrough across the campus runs without a hitch above the threshold.",
+        "Memory is stable across the walk (no monotonic growth).",
+        "Performance check runs in CI or nightly with a stored baseline.",
+        "All five buildings are reachable and enterable."
+      ],
+      "notes": "Five-building walkthrough, culling and memory checks run in Playwright; the 5-minute reference-hardware run remains external."
+    },
+    {
+      "id": "AT-400",
+      "title": "Main menu and onboarding",
+      "type": "product",
+      "milestone": "M4",
+      "status": "done",
+      "priority": "P1",
+      "risk": "low",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-308"
+      ],
+      "acceptance_criteria": [
+        "First run offers 'connect to Ananta' and 'demo mode', with the difference explained.",
+        "Connection settings are remembered; a failed connection explains what to check.",
+        "A new user reaches a walkable scene in under 60 seconds in demo mode.",
+        "Menu is keyboard navigable and works at 720p and 4K."
+      ],
+      "notes": "Menu with demo/connect explanation, persisted collector URL, error guidance and a keyboard-only path into the scene."
+    },
+    {
+      "id": "AT-401",
+      "title": "Settings and persistence",
+      "type": "product",
+      "milestone": "M4",
+      "status": "done",
+      "priority": "P1",
+      "risk": "low",
+      "progress_percent": 100,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-400"
+      ],
+      "acceptance_criteria": [
+        "Graphics quality, key bindings and audio volumes are configurable and persisted.",
+        "Settings apply without a reload where technically possible; otherwise the reload is explicit.",
+        "Reset-to-defaults exists and works.",
+        "Invalid stored settings fall back safely and are logged."
+      ],
+      "notes": "Quality, key bindings, audio, language, UI scale, motion/colour settings persisted locally; reset and safe fallback tested."
+    },
+    {
+      "id": "AT-402",
+      "title": "Audio pass",
+      "type": "product",
+      "milestone": "M4",
+      "status": "done",
+      "priority": "P2",
+      "risk": "low",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-403"
+      ],
+      "acceptance_criteria": [
+        "Ambience, footsteps and status cues exist and can be muted independently.",
+        "No autoplay violation: audio starts only after a user gesture.",
+        "Audio assets are attributed and licensed.",
+        "Spatial audio is used where it helps orientation, with a documented fallback."
+      ],
+      "notes": "Procedural ambience, footsteps and status cues via Web Audio after a gesture, independent volumes, stereo pan."
+    },
+    {
+      "id": "AT-403",
+      "title": "UI and UX polish",
+      "type": "product",
+      "milestone": "M4",
+      "status": "done",
+      "priority": "P2",
+      "risk": "low",
+      "progress_percent": 100,
+      "estimate": "3d",
+      "depends_on": [
+        "AT-208"
+      ],
+      "acceptance_criteria": [
+        "Agent list with filter by status/room, minimap and tooltips are implemented.",
+        "All interactive elements are reachable by keyboard and have visible focus.",
+        "Visual style is consistent (one spacing/colour/type scale).",
+        "No text smaller than 12 px at 1080p."
+      ],
+      "notes": "Agent list with status/room filters and occupancy counts, minimap, tooltips, focus styles, one type/spacing scale."
+    },
+    {
+      "id": "AT-404",
+      "title": "Accessibility",
+      "type": "product",
+      "milestone": "M4",
+      "status": "partial",
+      "priority": "P1",
+      "risk": "medium",
+      "progress_percent": 90,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-403"
+      ],
+      "acceptance_criteria": [
+        "Reduced-motion mode, colour-blind-safe status palette and scalable UI text.",
+        "Status is never communicated by colour alone (icon or label too).",
+        "A documented manual accessibility checklist is completed.",
+        "Keyboard-only playthrough of the core loop is possible."
+      ],
+      "notes": "Reduced motion, colour-blind palette, status icons+labels, scalable text and keyboard playthrough; manual SR/contrast/Safari checks remain."
+    },
+    {
+      "id": "AT-405",
+      "title": "README, screenshots and play link",
+      "type": "docs",
+      "milestone": "M4",
+      "status": "done",
+      "priority": "P1",
+      "risk": "low",
+      "progress_percent": 100,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-308"
+      ],
+      "acceptance_criteria": [
+        "README has a one-paragraph pitch, screenshot/GIF, play link and a <10-line setup.",
+        "Architecture summary links to AGENTS.md and the ADRs.",
+        "Contributor entry point is obvious (CONTRIBUTING, good first issues).",
+        "All screenshots show the current build."
+      ],
+      "notes": "README with screenshots, setup, scripts and architecture links; Pages deploy workflow provided."
+    },
+    {
+      "id": "AT-406",
+      "title": "Licence, attribution and contributing",
+      "type": "docs",
+      "milestone": "M4",
+      "status": "done",
+      "priority": "P0",
+      "risk": "low",
+      "progress_percent": 100,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-000"
+      ],
+      "acceptance_criteria": [
+        "LICENSE for code (BSD-3-Clause) is present and referenced from README.",
+        "ATTRIBUTION.md lists every third-party asset with source and licence.",
+        "CONTRIBUTING.md explains setup, checks, PR rules and the task-id convention.",
+        "CODE_OF_CONDUCT.md exists.",
+        "No asset with an incompatible licence remains in the repo."
+      ],
+      "notes": "BSD-3-Clause LICENSE, ATTRIBUTION.md and CONTRIBUTING.md added; no third-party art assets."
+    },
+    {
+      "id": "AT-407",
+      "title": "CI pipeline",
+      "type": "release",
+      "milestone": "M4",
+      "status": "done",
+      "priority": "P0",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-008",
+        "AT-406"
+      ],
+      "acceptance_criteria": [
+        "CI runs typecheck, lint, unit tests, e2e tests, build and todo validation.",
+        "Required checks block merge to main.",
+        "Build artifact is deployable to a static host (GitHub Pages or itch.io).",
+        "Node version is pinned to the same version as local development."
+      ],
+      "notes": "CI runs boundary/typecheck/lint/i18n/assets/tests/build/e2e/todo validation; artefact deploy workflow. Branch protection is a repo setting."
+    },
+    {
+      "id": "AT-408",
+      "title": "Release pipeline and versioning",
+      "type": "release",
+      "milestone": "M4",
+      "status": "done",
+      "priority": "P1",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-407"
+      ],
+      "acceptance_criteria": [
+        "Semantic versioning, CHANGELOG and tagged releases.",
+        "A release produces a versioned static bundle with a persistent URL.",
+        "Rollback to the previous release is documented and tested once.",
+        "Build is reproducible from a clean checkout at the tag."
+      ],
+      "notes": "SemVer check, CHANGELOG, release workflow, versioned zip, Pages deploy, rollback doc and a byte-identical double build."
+    },
+    {
+      "id": "AT-409",
+      "title": "Performance regression budget in CI",
+      "type": "qa",
+      "milestone": "M4",
+      "status": "done",
+      "priority": "P1",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-308",
+        "AT-407"
+      ],
+      "acceptance_criteria": [
+        "A reference scene and camera path are rendered in CI/nightly with recorded frame ms and draw calls.",
+        "A regression above the documented threshold fails the check.",
+        "Flaky results are handled (median of N runs, documented variance).",
+        "Results are published as an artifact or comment."
+      ],
+      "notes": "Nightly perf workflow with medians, committed baseline, 35% regression gate and uploaded results artifact."
+    },
+    {
+      "id": "AT-500",
+      "title": "Agent activity replay",
+      "type": "research",
+      "milestone": "M5",
+      "status": "done",
+      "priority": "P3",
+      "risk": "low",
+      "progress_percent": 100,
+      "estimate": "4d",
+      "depends_on": [
+        "AT-308"
+      ],
+      "acceptance_criteria": [
+        "Agent events are journaled with timestamps and can be replayed deterministically.",
+        "A scrubber moves through a recorded session.",
+        "Replay works offline without the collector."
+      ],
+      "notes": "Snapshot journal with timestamps, scrubber, play/pause/live and offline replay; unit tests for seek/serialisation."
+    },
+    {
+      "id": "AT-501",
+      "title": "Spectator mode",
+      "type": "research",
+      "milestone": "M5",
+      "status": "done",
+      "priority": "P3",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "4d",
+      "depends_on": [
+        "AT-308"
+      ],
+      "acceptance_criteria": [
+        "A second client observes the same session without controlling it.",
+        "State sync stays under 200 ms on a local network.",
+        "Host can revoke a spectator."
+      ],
+      "notes": "Read-only spectator URL, collector spectator tracking, admin-token revocation endpoint and an e2e revocation test. State rate is 8 Hz (<125 ms)."
+    },
+    {
+      "id": "AT-502",
+      "title": "Touch controls",
+      "type": "product",
+      "milestone": "M5",
+      "status": "partial",
+      "priority": "P2",
+      "risk": "medium",
+      "progress_percent": 85,
+      "estimate": "3d",
+      "depends_on": [
+        "AT-401"
+      ],
+      "acceptance_criteria": [
+        "Virtual joystick and look area work on mobile Chrome and Safari.",
+        "No stuck inputs after multi-touch or backgrounding.",
+        "Touch UI can be disabled and never appears on desktop."
+      ],
+      "notes": "Joystick/look area, auto policy, reset on blur/hide and touch e2e; real iOS Safari test still manual."
+    },
+    {
+      "id": "AT-503",
+      "title": "Localisation (de/en)",
+      "type": "docs",
+      "milestone": "M5",
+      "status": "done",
+      "priority": "P2",
+      "risk": "low",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-403"
+      ],
+      "acceptance_criteria": [
+        "All UI strings are externalised into locale files.",
+        "Language switch is persisted and applies without a reload.",
+        "No hard-coded user-facing string remains in components (lint check)."
+      ],
+      "notes": "en/de dictionaries with parity check, persisted switch without reload and a lint gate against literal UI strings."
+    }
+  ],
+  "critical_path_tasks": [
+    "AT-000",
+    "AT-001",
+    "AT-002",
+    "AT-003",
+    "AT-004",
+    "AT-006",
+    "AT-100",
+    "AT-110",
+    "AT-101",
+    "AT-103",
+    "AT-104",
+    "AT-105",
+    "AT-200",
+    "AT-202",
+    "AT-203",
+    "AT-300",
+    "AT-302",
+    "AT-306",
+    "AT-307",
+    "AT-308"
+  ],
+  "tasks_status_summary": {
+    "total": 54,
+    "by_status": {
+      "todo": 0,
+      "in_progress": 0,
+      "partial": 5,
+      "blocked": 1,
+      "done": 48
+    },
+    "progress_percent_done": 88.9,
+    "by_priority": {
+      "P0": 32,
+      "P1": 16,
+      "P2": 4,
+      "P3": 2
+    },
+    "by_risk": {
+      "critical": 1,
+      "high": 14,
+      "low": 15,
+      "medium": 24
+    },
+    "critical_path": {
+      "total": 20,
+      "done": 18,
+      "remaining": 2
+    },
+    "milestones": {
+      "total": 6,
+      "todo": 0,
+      "in_progress": 5,
+      "blocked": 0,
+      "done": 1
+    }
+  },
+  "tasks_type_summary": {
+    "total": 54,
+    "by_type": {
+      "bootstrap": {
+        "total": 1,
+        "done": 1,
+        "partial": 0,
+        "blocked": 0,
+        "by_status": {
+          "todo": 0,
+          "in_progress": 0,
+          "partial": 0,
+          "blocked": 0,
+          "done": 1
+        },
+        "progress_percent": 100.0
+      },
+      "data": {
+        "total": 8,
+        "done": 8,
+        "partial": 0,
+        "blocked": 0,
+        "by_status": {
+          "todo": 0,
+          "in_progress": 0,
+          "partial": 0,
+          "blocked": 0,
+          "done": 8
+        },
+        "progress_percent": 100.0
+      },
+      "docs": {
+        "total": 4,
+        "done": 4,
+        "partial": 0,
+        "blocked": 0,
+        "by_status": {
+          "todo": 0,
+          "in_progress": 0,
+          "partial": 0,
+          "blocked": 0,
+          "done": 4
+        },
+        "progress_percent": 100.0
+      },
+      "foundation": {
+        "total": 2,
+        "done": 2,
+        "partial": 0,
+        "blocked": 0,
+        "by_status": {
+          "todo": 0,
+          "in_progress": 0,
+          "partial": 0,
+          "blocked": 0,
+          "done": 2
+        },
+        "progress_percent": 100.0
+      },
+      "gameplay": {
+        "total": 5,
+        "done": 5,
+        "partial": 0,
+        "blocked": 0,
+        "by_status": {
+          "todo": 0,
+          "in_progress": 0,
+          "partial": 0,
+          "blocked": 0,
+          "done": 5
+        },
+        "progress_percent": 100.0
+      },
+      "product": {
+        "total": 7,
+        "done": 5,
+        "partial": 2,
+        "blocked": 0,
+        "by_status": {
+          "todo": 0,
+          "in_progress": 0,
+          "partial": 2,
+          "blocked": 0,
+          "done": 5
+        },
+        "progress_percent": 71.4
+      },
+      "qa": {
+        "total": 7,
+        "done": 4,
+        "partial": 2,
+        "blocked": 1,
+        "by_status": {
+          "todo": 0,
+          "in_progress": 0,
+          "partial": 2,
+          "blocked": 1,
+          "done": 4
+        },
+        "progress_percent": 57.1
+      },
+      "release": {
+        "total": 2,
+        "done": 2,
+        "partial": 0,
+        "blocked": 0,
+        "by_status": {
+          "todo": 0,
+          "in_progress": 0,
+          "partial": 0,
+          "blocked": 0,
+          "done": 2
+        },
+        "progress_percent": 100.0
+      },
+      "render": {
+        "total": 9,
+        "done": 8,
+        "partial": 1,
+        "blocked": 0,
+        "by_status": {
+          "todo": 0,
+          "in_progress": 0,
+          "partial": 1,
+          "blocked": 0,
+          "done": 8
+        },
+        "progress_percent": 88.9
+      },
+      "research": {
+        "total": 2,
+        "done": 2,
+        "partial": 0,
+        "blocked": 0,
+        "by_status": {
+          "todo": 0,
+          "in_progress": 0,
+          "partial": 0,
+          "blocked": 0,
+          "done": 2
+        },
+        "progress_percent": 100.0
+      },
+      "world": {
+        "total": 7,
+        "done": 7,
+        "partial": 0,
+        "blocked": 0,
+        "by_status": {
+          "todo": 0,
+          "in_progress": 0,
+          "partial": 0,
+          "blocked": 0,
+          "done": 7
+        },
+        "progress_percent": 100.0
+      }
+    }
+  },
+  "progress_summary": {
+    "state": "blocked",
+    "todo_remaining": 0,
+    "in_progress": 0,
+    "partial": 5,
+    "blocked": 1,
+    "done": 48
+  },
+  "execution_stage_summary": {
+    "current_milestone": "M0",
+    "stage": "planning",
+    "next_task": "AT-000",
+    "note": "Nothing started yet. Begin with AT-000, then AT-002 (boundary) before feature work."
+  },
+  "summary_notes": [
+    "M0 is a hard gate: if walking and fake agents do not feel right, the campus will not fix it.",
+    "AT-307 (50-agent crowd performance) is the highest-risk item; reduce agent count before adding complexity.",
+    "The sim/render boundary (AT-002) is the one rule that must never be relaxed.",
+    "Every completed task needs evidence, not just a status change."
+  ],
+  "end_summaries": []
+}
