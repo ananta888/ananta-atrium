@@ -192,6 +192,59 @@ function plannedFromTask(task: HubTask | undefined): PlannedTask | undefined {
   }
 }
 
+export function mapRoleAgent(
+  worker: HubWorker | undefined,
+  membership: TeamMembership,
+  currentTask: HubTask | undefined,
+  plannedTask: HubTask | undefined,
+  campus: CampusDef,
+  nowMs: number,
+): AgentState {
+  const identity = `role:${membership.memberId || `${membership.teamId}:${membership.roleName}`}`
+  const seat = seatFor(identity, campus.desks)
+  const status: AgentStatus = currentTask
+    ? String(currentTask.status).toLowerCase() === 'waiting_for_review'
+      ? 'reviewing'
+      : ['paused', 'blocked_by_dependency', 'proposing'].includes(String(currentTask.status).toLowerCase())
+        ? 'waiting'
+        : 'working'
+    : 'idle'
+  const task = currentTask ?? plannedTask
+  return {
+    schemaVersion: AGENT_STATE_SCHEMA_VERSION,
+    id: identity,
+    name: (membership.displayName || membership.roleName).slice(0, 64),
+    role: membership.roleName.slice(0, 64),
+    status,
+    buildingId: seat?.buildingId ?? campus.buildings[0]?.id ?? 'campus',
+    roomId: seat?.roomId ?? 'lobby',
+    deskId: seat?.id ?? 'unassigned',
+    task: {
+      title: (currentTask?.title ?? plannedTask?.title ?? 'Waiting for assignment').slice(0, 200),
+      progress: currentTask ? (status === 'reviewing' ? 0.9 : 0.5) : 0.1,
+      ...(task ? { taskId: task.id } : {}),
+    },
+    activity: {
+      kind: status === 'working' ? 'typing' : status === 'reviewing' ? 'reviewing' : status === 'waiting' ? 'thinking' : 'idle',
+    },
+    updatedAt: new Date(nowMs).toISOString(),
+    source: 'live',
+    stale: false,
+    assignment: {
+      teamMemberId: membership.memberId,
+      ...(worker?.url ? { workerUrl: worker.url } : {}),
+      ...(worker?.runtime ? { runtime: worker.runtime } : {}),
+      ...(worker?.health ? { health: worker.health } : {}),
+      ...(plannedTask ? { planned: plannedFromTask(plannedTask)! } : {}),
+      path: {
+        teamId: membership.teamId,
+        teamName: membership.teamName,
+        ...(taskPath(task) ?? {}),
+      },
+    },
+  }
+}
+
 export function mapWorkerToAgent(
   worker: HubWorker,
   currentTask: HubTask | undefined,
@@ -539,6 +592,41 @@ export class AnantaHubSource {
       this.status.reachable = true
       this.status.lastError = null
       this.status.lastSuccessAt = now
+      if (memberships.size > 0) {
+        const currentStatuses = new Set(['proposing', 'running', 'paused', 'blocked_by_dependency', 'waiting_for_review', 'updated'])
+        const memberSeen = new Set<string>()
+        const roleAgents: AgentState[] = []
+        for (const [memberUrl, membership] of memberships) {
+          if (!membership.memberId || memberSeen.has(membership.memberId)) continue
+          memberSeen.add(membership.memberId)
+          const worker = workers.find((item) => item.url === memberUrl)
+          const assigned = tasks
+            .filter(
+              (task) =>
+                task.assigned_agent_url === worker?.url &&
+                currentStatuses.has(String(task.status ?? '').toLowerCase()),
+            )
+            .sort((a, b) => Number(b.updated_at ?? 0) - Number(a.updated_at ?? 0))
+          const planned =
+            tasks
+              .filter(
+                (task) =>
+                  task.team_id === membership.teamId &&
+                  ['todo', 'paused', 'blocked_by_dependency'].includes(String(task.status ?? '').toLowerCase()),
+              )
+              .sort((a, b) => Number(b.updated_at ?? 0) - Number(a.updated_at ?? 0))[0] ??
+            tasks
+              .filter(
+                (task) =>
+                  !task.assigned_agent_url &&
+                  ['todo', 'paused', 'proposing'].includes(String(task.status ?? '').toLowerCase()),
+              )
+              .sort((a, b) => Number(a.updated_at ?? 0) - Number(b.updated_at ?? 0))[0]
+          roleAgents.push(mapRoleAgent(worker, membership, assigned[0], planned, this.campus, now))
+        }
+        if (roleAgents.length > 0) return this.enrich(roleAgents)
+      }
+
       if (workers.length > 0) {
         const unassignedQueue = tasks
           .filter(

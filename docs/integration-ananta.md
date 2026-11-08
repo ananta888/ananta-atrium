@@ -50,9 +50,12 @@ Rules:
 ### `GET /api/workers` (primary live source)
 
 Returns the registered worker agents (`id`, `url`, `role`, `health`, `runtime`,
-`worker_roles`, `capabilities`). The collector maps one atrium agent per worker,
-with its current assigned task and the next queued task, plus the organization
-path (`team_id`, `project_id`, `goal_id`, `plan_node_id`).
+`worker_roles`, `capabilities`). The collector maps one atrium agent per **team-member role assignment**
+(`team_members`), not per worker container. The worker URL is runtime metadata,
+the role is the agent identity. Each agent carries its current assigned task,
+the next queued task and the organization path (`team_id`, `project_id`,
+`goal_id`, `plan_node_id`). Unassigned worker containers are not shown as
+agents.
 
 Role names come from `GET /teams` plus `GET /teams/roles`: `team_members` map
 `agent_url` to `role_id`, so a worker is displayed with its real team role
