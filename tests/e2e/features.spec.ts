@@ -34,7 +34,7 @@ test('menu opens the demo scene and the agent list filters by status', async ({ 
   expect((await debug(page)).menuVisible).toBe(false)
 
   await page.keyboard.press('KeyL')
-  await expect(page.locator('.ui-panel')).toBeVisible()
+  await expect(page.locator('.ui-panel[aria-label="Agents"]')).toBeVisible()
   const countBefore = await page.locator('.ui-agent').count()
   expect(countBefore).toBeGreaterThan(10)
   await page.getByLabel('Status').selectOption('working')
@@ -102,7 +102,7 @@ test('replay records frames, scrubs and returns live', async ({ page }) => {
 
 test('settings apply, translate and reset', async ({ page }) => {
   await openDemo(page)
-  await page.getByRole('button', { name: 'Settings' }).click()
+  await page.locator('.ui-toolbar').getByRole('button', { name: 'Settings' }).click()
   const card = page.locator('.ui-settings-card')
   await expect(card.getByLabel('Language')).toBeVisible()
 
@@ -128,7 +128,7 @@ test('settings apply, translate and reset', async ({ page }) => {
 
 test('settings persist across a reload', async ({ page }) => {
   await openDemo(page)
-  await page.getByRole('button', { name: 'Settings' }).click()
+  await page.locator('.ui-toolbar').getByRole('button', { name: 'Settings' }).click()
   await page.locator('.ui-settings-card').getByLabel('Graphics quality').selectOption('low')
   await page
     .locator('.ui-settings-card')

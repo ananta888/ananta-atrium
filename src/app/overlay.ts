@@ -539,9 +539,10 @@ export class Overlay {
     if (connectButtons[1]) connectButtons[1].textContent = t('connect.demo')
     if (connectButtons[2]) connectButtons[2].textContent = t('menu.settings')
 
-    this.toolbar.querySelectorAll('button')[0]!.textContent = t('agentList.title')
-    this.toolbar.querySelectorAll('button')[1]!.textContent = t('replay.title')
-    this.toolbar.querySelectorAll('button')[2]!.textContent = t('menu.settings')
+    this.toolbar.querySelectorAll('button')[0]!.textContent = t('teleport.title')
+    this.toolbar.querySelectorAll('button')[1]!.textContent = t('agentList.title')
+    this.toolbar.querySelectorAll('button')[2]!.textContent = t('replay.title')
+    this.toolbar.querySelectorAll('button')[3]!.textContent = t('menu.settings')
     this.statusFilter.options[0]!.textContent = t('agentList.all')
     this.roomFilter.options[0]!.textContent = t('agentList.all')
     for (let i = 0; i < ALL_STATUSES.length; i++) {
