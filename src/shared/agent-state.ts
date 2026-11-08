@@ -40,6 +40,49 @@ export interface Vec3 {
   z: number
 }
 
+export interface BudgetBucket {
+  unit: 'ms' | 'tokens' | 'cost'
+  limit: number | null
+  used: number | null
+}
+
+export interface AgentBudget {
+  time?: BudgetBucket
+  tokens?: BudgetBucket
+  cost?: BudgetBucket
+}
+
+export interface TraceEvent {
+  at: string
+  kind: string
+  summary: string
+}
+
+export interface DiffFile {
+  path: string
+  additions: number
+  deletions: number
+}
+
+export interface AgentDiff {
+  files: DiffFile[]
+  additions: number
+  deletions: number
+  preview: string[]
+  truncated: boolean
+  artifactId?: string
+}
+
+export interface AgentTrace {
+  taskId?: string
+  sessionId?: string
+  attempts?: number
+  maxAttempts?: number
+  budget?: AgentBudget
+  diff?: AgentDiff
+  events?: TraceEvent[]
+}
+
 export interface AgentState {
   schemaVersion: typeof AGENT_STATE_SCHEMA_VERSION
   id: string
@@ -56,6 +99,7 @@ export interface AgentState {
   source: AgentSource
   stale: boolean
   position?: Vec3
+  trace?: AgentTrace
 }
 
 export interface AgentSnapshot {
@@ -65,8 +109,27 @@ export interface AgentSnapshot {
   agents: AgentState[]
 }
 
+export interface OpsEntry {
+  id: string
+  taskId?: string
+  workerId?: string
+  model?: string
+  status: string
+  queuePosition?: number
+  acquiredAt?: string
+  deadlineAt?: string
+}
+
+export interface OpsStatus {
+  generatedAt: string
+  active: OpsEntry[]
+  queued: OpsEntry[]
+  interactiveReserved?: boolean
+}
+
 export type StateMessage =
   | { type: 'snapshot'; snapshot: AgentSnapshot }
+  | { type: 'ops'; ops: OpsStatus }
   | { type: 'upsert'; agents: AgentState[] }
   | { type: 'remove'; ids: string[] }
   | { type: 'heartbeat'; at: string }
@@ -127,6 +190,8 @@ export function isStateMessage(value: unknown): value is StateMessage {
       return Array.isArray(v.ids) && v.ids.every((id) => typeof id === 'string')
     case 'heartbeat':
       return typeof v.at === 'string'
+    case 'ops':
+      return typeof v.ops === 'object' && v.ops !== null && Array.isArray((v.ops as OpsStatus).active)
     default:
       return false
   }

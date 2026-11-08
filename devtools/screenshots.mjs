@@ -59,6 +59,10 @@ try {
   await page.keyboard.press('KeyL')
   await page.waitForTimeout(700)
   await page.screenshot({ path: join(outDir, 'agents.png') })
+
+  await page.locator('.ui-agent').first().evaluate((node) => node.click())
+  await page.waitForTimeout(900)
+  await page.screenshot({ path: join(outDir, 'trace.png') })
 } finally {
   await browser.close()
   await server.close()

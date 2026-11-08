@@ -11,3 +11,5 @@ playwright-report/
 vite.config.ts.timestamp-*
 
 perf/results.json
+
+.atrium-chat-state.json

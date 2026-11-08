@@ -20,58 +20,286 @@
     "stale"
   ],
   "properties": {
-    "schemaVersion": { "const": 1 },
-    "id": { "type": "string", "minLength": 1, "maxLength": 128 },
-    "name": { "type": "string", "minLength": 1, "maxLength": 64 },
-    "role": { "type": "string", "maxLength": 64 },
-    "status": {
-      "enum": ["idle", "working", "waiting", "reviewing", "offline"]
+    "schemaVersion": {
+      "const": 1
     },
-    "buildingId": { "type": "string", "minLength": 1 },
-    "roomId": { "type": "string", "minLength": 1 },
-    "deskId": { "type": "string", "minLength": 1 },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "role": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "status": {
+      "enum": [
+        "idle",
+        "working",
+        "waiting",
+        "reviewing",
+        "offline"
+      ]
+    },
+    "buildingId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "roomId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "deskId": {
+      "type": "string",
+      "minLength": 1
+    },
     "task": {
       "type": "object",
-      "required": ["title", "progress"],
+      "required": [
+        "title",
+        "progress"
+      ],
       "properties": {
-        "title": { "type": "string", "maxLength": 200 },
-        "progress": { "type": "number", "minimum": 0, "maximum": 1 },
-        "taskId": { "type": "string" }
+        "title": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "progress": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "taskId": {
+          "type": "string"
+        }
       },
       "additionalProperties": true
     },
     "activity": {
       "type": "object",
-      "required": ["kind"],
+      "required": [
+        "kind"
+      ],
       "properties": {
         "kind": {
-          "enum": ["typing", "reading", "thinking", "meeting", "walking", "reviewing", "idle"]
+          "enum": [
+            "typing",
+            "reading",
+            "thinking",
+            "meeting",
+            "walking",
+            "reviewing",
+            "idle"
+          ]
         },
-        "detail": { "type": "string", "maxLength": 200 }
+        "detail": {
+          "type": "string",
+          "maxLength": 200
+        }
       },
       "additionalProperties": true
     },
     "metrics": {
       "type": "object",
       "properties": {
-        "tokensPerSecond": { "type": "number", "minimum": 0 },
-        "contextUsed": { "type": "number", "minimum": 0, "maximum": 1 }
+        "tokensPerSecond": {
+          "type": "number",
+          "minimum": 0
+        },
+        "contextUsed": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
       },
       "additionalProperties": true
     },
-    "updatedAt": { "type": "string", "format": "date-time" },
-    "source": { "enum": ["live", "fake"] },
-    "stale": { "type": "boolean" },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "enum": [
+        "live",
+        "fake"
+      ]
+    },
+    "stale": {
+      "type": "boolean"
+    },
     "position": {
       "type": "object",
-      "required": ["x", "y", "z"],
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
       "properties": {
-        "x": { "type": "number" },
-        "y": { "type": "number" },
-        "z": { "type": "number" }
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "trace": {
+      "type": "object",
+      "properties": {
+        "taskId": {
+          "type": "string"
+        },
+        "sessionId": {
+          "type": "string"
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxAttempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "budget": {
+          "type": "object",
+          "properties": {
+            "time": {
+              "$ref": "#/definitions/budgetBucket"
+            },
+            "tokens": {
+              "$ref": "#/definitions/budgetBucket"
+            },
+            "cost": {
+              "$ref": "#/definitions/budgetBucket"
+            }
+          },
+          "additionalProperties": false
+        },
+        "diff": {
+          "type": "object",
+          "properties": {
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "path",
+                  "additions",
+                  "deletions"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "additions": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "deletions": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additions": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "deletions": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "preview": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "truncated": {
+              "type": "boolean"
+            },
+            "artifactId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "files",
+            "additions",
+            "deletions",
+            "preview",
+            "truncated"
+          ],
+          "additionalProperties": false
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "at",
+              "kind",
+              "summary"
+            ],
+            "properties": {
+              "at": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "summary": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
       },
       "additionalProperties": false
     }
   },
-  "additionalProperties": true
+  "additionalProperties": true,
+  "definitions": {
+    "budgetBucket": {
+      "type": "object",
+      "required": [
+        "unit",
+        "limit",
+        "used"
+      ],
+      "properties": {
+        "unit": {
+          "enum": [
+            "ms",
+            "tokens",
+            "cost"
+          ]
+        },
+        "limit": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "used": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
 }

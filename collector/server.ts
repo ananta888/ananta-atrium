@@ -1,9 +1,10 @@
-import { createServer, type Server } from 'node:http'
+import { createServer, type IncomingMessage, type Server } from 'node:http'
 import { WebSocket, WebSocketServer } from 'ws'
-import type { AgentSnapshot, AgentState } from '../src/shared/agent-state.js'
+import type { AgentSnapshot, AgentState, OpsStatus } from '../src/shared/agent-state.js'
 import { AGENT_STATE_SCHEMA_VERSION } from '../src/shared/agent-state.js'
 import type { CollectorConfig } from './config.js'
 import { log } from './logger.js'
+import type { ChatBridge, InstructionClass, SteerMode } from './chat.js'
 
 export interface HealthReport {
   status: 'ok' | 'degraded'
@@ -15,6 +16,7 @@ export interface HealthReport {
   upstreams: {
     hub: { url: string; reachable: boolean; lastError: string | null; lastSuccessAt: string | null }
     llama: Array<{ url: string; reachable: boolean; lastError: string | null; tokensPerSecond: number }>
+    workerPool?: { reachable: boolean; lastError: string | null; lastSuccessAt: string | null }
   }
 }
 
@@ -22,6 +24,21 @@ export interface CollectorServerOptions {
   config: CollectorConfig
   getAgents: () => AgentState[]
   getHealth: () => HealthReport
+  getOps?: () => OpsStatus | null
+  chat?: ChatBridge
+}
+
+async function readJsonBody(request: IncomingMessage): Promise<Record<string, unknown>> {
+  const chunks: Buffer[] = []
+  for await (const chunk of request) chunks.push(Buffer.from(chunk))
+  const raw = Buffer.concat(chunks).toString('utf8')
+  if (!raw) return {}
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    return typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : {}
+  } catch {
+    throw new Error('invalid_json')
+  }
 }
 
 export interface RunningCollector {
@@ -98,6 +115,59 @@ export function startCollectorServer(options: CollectorServerOptions): RunningCo
       send(200, { spectators: spectators.size, blocked: spectatorsBlocked })
       return
     }
+    if (url.pathname === '/chat' && request.method === 'POST') {
+      if (!options.chat) {
+        send(503, { error: 'chat_unavailable' })
+        return
+      }
+      void readJsonBody(request)
+        .then(async (body) => {
+          const agentId = String(body.agentId ?? '')
+          const text = String(body.text ?? '')
+          const agent = getAgents().find((item) => item.id === agentId)
+          if (!agent) {
+            send(404, { error: 'agent_not_found' })
+            return
+          }
+          try {
+            const result = await options.chat!.ask({ key: agent.id, label: agent.name, role: agent.role, text })
+            send(200, result)
+          } catch (error) {
+            send(502, { error: 'chat_failed', message: (error as Error).message })
+          }
+        })
+        .catch(() => send(400, { error: 'invalid_json' }))
+      return
+    }
+    if (url.pathname === '/steer' && request.method === 'POST') {
+      if (!options.chat) {
+        send(503, { error: 'chat_unavailable' })
+        return
+      }
+      void readJsonBody(request)
+        .then(async (body) => {
+          const taskId = String(body.taskId ?? '')
+          const text = String(body.text ?? '')
+          const mode = String(body.mode ?? 'next_iteration_instruction') as SteerMode
+          const instructionClass = String(body.instructionClass ?? 'constraint') as InstructionClass
+          if (!taskId) {
+            send(400, { error: 'task_id_required' })
+            return
+          }
+          try {
+            const result = await options.chat!.steer({ taskId, text, mode, instructionClass })
+            send(200, result)
+          } catch (error) {
+            send(502, { error: 'steer_failed', message: (error as Error).message })
+          }
+        })
+        .catch(() => send(400, { error: 'invalid_json' }))
+      return
+    }
+    if (url.pathname === '/ops') {
+      send(200, options.getOps?.() ?? { active: [], queued: [] })
+      return
+    }
     if (url.pathname === '/') {
       send(200, {
         name: 'ananta-atrium-collector',
@@ -143,6 +213,7 @@ export function startCollectorServer(options: CollectorServerOptions): RunningCo
   })
 
   let lastSent = new Map<string, string>()
+  let lastOps = ''
   const broadcast = (): void => {
     const agents = getAgents()
     if (wss.clients.size === 0) {
@@ -162,6 +233,14 @@ export function startCollectorServer(options: CollectorServerOptions): RunningCo
     const messages: string[] = []
     if (upserts.length > 0) messages.push(JSON.stringify({ type: 'upsert', agents: upserts }))
     if (removed.length > 0) messages.push(JSON.stringify({ type: 'remove', ids: removed }))
+    const ops = options.getOps?.()
+    if (ops) {
+      const encoded = JSON.stringify(ops)
+      if (encoded !== lastOps) {
+        lastOps = encoded
+        messages.push(JSON.stringify({ type: 'ops', ops }))
+      }
+    }
     for (const message of messages) {
       for (const socket of wss.clients) {
         if (socket.readyState !== WebSocket.OPEN) continue

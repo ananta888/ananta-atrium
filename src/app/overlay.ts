@@ -11,6 +11,21 @@ import {
   type TouchMode,
 } from './settings.js'
 
+export interface ChatRequest {
+  agentId: string
+  taskId?: string
+  text: string
+  mode: 'ask' | 'steer'
+  steerMode: 'next_iteration_instruction' | 'pause_then_apply' | 'context_note_only'
+  instructionClass: 'correction' | 'constraint' | 'preference' | 'branch_hint' | 'stop_condition'
+}
+
+export interface ChatResult {
+  ok: boolean
+  message: string
+  replies?: Array<{ sender: string; text: string }>
+}
+
 export interface OverlayCallbacks {
   onEnterDemo: () => void
   onConnect: (url: string) => void
@@ -19,6 +34,7 @@ export interface OverlayCallbacks {
   onReplayPlay: (playing: boolean) => void
   onReplaySeek: (t: number) => void
   onFocusAgent: (id: string | null) => void
+  onChat: (request: ChatRequest) => Promise<ChatResult>
 }
 
 export interface PlayerPose {
@@ -108,6 +124,23 @@ export class Overlay {
   private player: PlayerPose = { x: 0, z: 0, yaw: 0 }
   private roomNames = new Map<string, string>()
   private selectedAgent: string | null = null
+  private readonly detailRoot: HTMLDivElement
+  private readonly detailTitle: HTMLDivElement
+  private readonly detailBody: HTMLDivElement
+  private readonly detailBudgets: HTMLDivElement
+  private readonly detailAttempts: HTMLDivElement
+  private readonly detailDiff: HTMLPreElement
+  private readonly detailEvents: HTMLUListElement
+  private readonly chatMode: HTMLSelectElement
+  private readonly chatSteerMode: HTMLSelectElement
+  private readonly chatClass: HTMLSelectElement
+  private readonly chatText: HTMLTextAreaElement
+  private readonly chatSend: HTMLButtonElement
+  private readonly chatStatus: HTMLDivElement
+  private readonly chatReplies: HTMLUListElement
+  private readonly queueChip: HTMLSpanElement
+  private queueCounts = { active: 0, queued: 0 }
+  private agentListSignature = ''
   private connection: 'connecting' | 'live' | 'offline' = 'offline'
   private connectVisible = false
   private replay: ReplayInfo = {
@@ -135,6 +168,9 @@ export class Overlay {
     this.settingsLayer.hidden = true
 
     this.toolbar = element('div', 'ui-toolbar')
+    this.queueChip = element('span', 'ui-chip', t('queue.label', { active: 0, queued: 0 }))
+    this.queueChip.style.pointerEvents = 'none'
+    this.toolbar.append(this.queueChip)
     const agentsButton = button(t('agentList.title'), 'ui-chip')
     agentsButton.addEventListener('click', () => this.toggleAgentList())
     const replayButton = button(t('replay.title'), 'ui-chip')
@@ -175,7 +211,60 @@ export class Overlay {
     this.minimap.width = 340
     this.minimap.height = 220
     this.minimap.setAttribute('aria-label', t('agentList.minimap'))
-    this.agentPanel.append(header, this.agentCount, filters, this.agentList, this.minimap)
+    this.detailRoot = element('div', 'ui-detail')
+    this.detailRoot.hidden = true
+    this.detailTitle = element('div', 'ui-detail-title')
+    this.detailBody = element('div', 'ui-note')
+    this.detailBudgets = element('div', 'ui-budgets')
+    this.detailAttempts = element('div', 'ui-note')
+    this.detailDiff = element('pre', 'ui-pre')
+    this.detailEvents = element('ul', 'ui-events')
+    const chatBox = element('div', 'ui-chat')
+    chatBox.append(element('div', 'ui-detail-title', t('chat.title')))
+    this.chatMode = element('select')
+    this.chatMode.setAttribute('aria-label', t('chat.title'))
+    this.chatMode.append(this.option(t('chat.modeAsk'), 'ask'), this.option(t('chat.modeSteer'), 'steer'))
+    this.chatSteerMode = element('select')
+    this.chatSteerMode.setAttribute('aria-label', t('chat.steerMode'))
+    this.chatSteerMode.append(
+      this.option(t('chat.modeNext'), 'next_iteration_instruction'),
+      this.option(t('chat.modePause'), 'pause_then_apply'),
+      this.option(t('chat.modeContext'), 'context_note_only'),
+    )
+    this.chatClass = element('select')
+    this.chatClass.setAttribute('aria-label', t('chat.class'))
+    this.chatClass.append(
+      this.option('correction', 'correction'),
+      this.option('constraint', 'constraint'),
+      this.option('preference', 'preference'),
+      this.option('branch_hint', 'branch_hint'),
+      this.option('stop_condition', 'stop_condition'),
+    )
+    this.chatText = element('textarea', 'ui-textarea')
+    this.chatText.placeholder = t('chat.placeholder')
+    this.chatText.rows = 2
+    this.chatSend = button(t('chat.send'), 'ui-button primary')
+    this.chatStatus = element('div', 'ui-status')
+    this.chatReplies = element('ul', 'ui-events')
+    const chatControls = element('div', 'ui-chat-controls')
+    chatControls.append(this.chatMode, this.chatSteerMode, this.chatClass, this.chatSend)
+    chatBox.append(chatControls, this.chatText, this.chatStatus, this.chatReplies)
+    this.detailRoot.append(
+      this.detailTitle,
+      this.detailBody,
+      this.detailBudgets,
+      this.detailAttempts,
+      element('div', 'ui-note', t('detail.diff')),
+      this.detailDiff,
+      element('div', 'ui-note', t('detail.events')),
+      this.detailEvents,
+      chatBox,
+    )
+    this.agentPanel.append(header, this.agentCount, filters, this.detailRoot, this.agentList, this.minimap)
+
+    this.chatMode.addEventListener('change', () => this.syncChatMode())
+    this.chatSend.addEventListener('click', () => void this.sendChat())
+    this.syncChatMode()
 
     this.replayBar = element('div', 'ui-replay')
     this.replayBar.hidden = true
@@ -360,6 +449,7 @@ export class Overlay {
       this.statusFilter.options[i + 1]!.textContent = statusLabel(ALL_STATUSES[i] as AgentStatus)
     }
     this.renderReplay()
+    this.queueChip.textContent = t('queue.label', this.queueCounts)
   }
 
   applySettings(settings: Settings): void {
@@ -614,6 +704,7 @@ export class Overlay {
       option.textContent = `${name} (${counts.get(option.value) ?? 0})`
     }
     this.renderAgentList()
+    this.renderDetail()
     this.renderMinimap()
   }
 
@@ -623,6 +714,10 @@ export class Overlay {
     const filtered = this.agents.filter(
       (agent) => (status === 'all' || agent.status === status) && (room === 'all' || agent.roomId === room),
     )
+    const signature = `${this.selectedAgent}|${status}|${room}|${this.settings.colorBlindSafe}|` +
+      filtered.map((a) => `${a.id}:${a.status}:${a.roomId}:${a.task.title}`).join('|')
+    if (signature === this.agentListSignature) return
+    this.agentListSignature = signature
     this.agentCount.textContent = t('agentList.count', { count: filtered.length })
     this.agentList.replaceChildren()
     if (filtered.length === 0) {
@@ -642,6 +737,7 @@ export class Overlay {
         this.selectedAgent = this.selectedAgent === agent.id ? null : agent.id
         this.callbacks.onFocusAgent(this.selectedAgent)
         this.renderAgentList()
+        this.renderDetail()
       })
       const dot = element('span', 'ui-dot')
       dot.style.background = palette[agent.status]
@@ -657,6 +753,113 @@ export class Overlay {
       row.append(dot, body, progress)
       item.append(row)
       this.agentList.append(item)
+    }
+  }
+
+  updateOps(ops: { active: unknown[]; queued: unknown[] }): void {
+    this.queueCounts = { active: ops.active.length, queued: ops.queued.length }
+    this.queueChip.textContent = t('queue.label', this.queueCounts)
+  }
+
+  private syncChatMode(): void {
+    const steer = this.chatMode.value === 'steer'
+    this.chatSteerMode.hidden = !steer
+    this.chatClass.hidden = !steer
+    this.chatStatus.textContent = t(steer ? 'chat.steerHint' : 'chat.askHint')
+  }
+
+  private meter(label: string, bucket: { unit: string; limit: number | null; used: number | null }): HTMLDivElement {
+    const wrapper = element('div', 'ui-meter')
+    const ratio =
+      bucket.limit !== null && bucket.limit > 0 ? Math.max(0, Math.min(1, (bucket.used ?? 0) / bucket.limit)) : 0
+    const used = bucket.used === null ? t('detail.unknown') : `${Math.round(bucket.used)}${bucket.unit === 'ms' ? 'ms' : ''}`
+    const limit = bucket.limit === null ? t('detail.unknown') : `${Math.round(bucket.limit)}${bucket.unit === 'ms' ? 'ms' : ''}`
+    const track = element('div', 'ui-meter-track')
+    const fill = element('div', 'ui-meter-fill')
+    fill.style.width = `${Math.round(ratio * 100)}%`
+    if (ratio > 0.85) fill.style.background = '#ef6f5a'
+    track.append(fill)
+    wrapper.append(element('div', 'ui-note', `${label}: ${used} / ${limit}`), track)
+    return wrapper
+  }
+
+  private renderDetail(): void {
+    const agent = this.agents.find((item) => item.id === this.selectedAgent)
+    this.detailRoot.hidden = !agent
+    if (!agent) return
+    this.detailTitle.textContent = `${agent.name} · ${statusLabel(agent.status)}`
+    this.detailBody.textContent = [
+      agent.role,
+      t('detail.task') + ': ' + agent.task.title,
+      t('detail.progress') + ': ' + `${Math.round(agent.task.progress * 100)}%`,
+    ].join('\n')
+
+    this.detailBudgets.replaceChildren()
+    const trace = agent.trace
+    if (trace?.budget?.time) this.detailBudgets.append(this.meter(t('detail.time'), trace.budget.time))
+    if (trace?.budget?.tokens) this.detailBudgets.append(this.meter(t('detail.tokens'), trace.budget.tokens))
+    if (trace?.budget?.cost) this.detailBudgets.append(this.meter('Cost', trace.budget.cost))
+
+    const attempts =
+      trace?.attempts !== undefined
+        ? `${trace.attempts}${trace.maxAttempts !== undefined ? ` / ${trace.maxAttempts}` : ''}`
+        : t('detail.unknown')
+    this.detailAttempts.textContent = `${t('detail.attempts')}: ${attempts}`
+
+    if (trace?.diff) {
+      const files = trace.diff.files.map((file) => `${file.path}  +${file.additions} -${file.deletions}`).join('\n')
+      this.detailDiff.textContent = `${files}\n\n${trace.diff.preview.join('\n')}${trace.diff.truncated ? '\n… truncated' : ''}`
+      this.detailDiff.hidden = false
+    } else {
+      this.detailDiff.textContent = t('detail.unknown')
+    }
+
+    this.detailEvents.replaceChildren()
+    for (const event of (trace?.events ?? []).slice(-6)) {
+      const item = element('li')
+      const time = new Date(event.at).toLocaleTimeString()
+      item.textContent = `${time} · ${event.kind} · ${event.summary}`
+      this.detailEvents.append(item)
+    }
+    if ((trace?.events ?? []).length === 0) {
+      this.detailEvents.append(element('li', 'ui-note', t('detail.unknown')))
+    }
+  }
+
+  private async sendChat(): Promise<void> {
+    const agent = this.agents.find((item) => item.id === this.selectedAgent)
+    if (!agent) return
+    const text = this.chatText.value.trim()
+    if (!text) return
+    const mode = this.chatMode.value === 'steer' ? 'steer' : 'ask'
+    const taskId = agent.trace?.taskId ?? agent.task.taskId
+    if (mode === 'steer' && !taskId) {
+      this.chatStatus.textContent = t('chat.error', { message: 'task id unknown' })
+      return
+    }
+    this.chatSend.disabled = true
+    this.chatStatus.textContent = t('chat.sending')
+    try {
+      const result = await this.callbacks.onChat({
+        agentId: agent.id,
+        ...(taskId ? { taskId } : {}),
+        text,
+        mode,
+        steerMode: this.chatSteerMode.value as ChatRequest['steerMode'],
+        instructionClass: this.chatClass.value as ChatRequest['instructionClass'],
+      })
+      this.chatStatus.textContent = result.ok ? result.message : t('chat.error', { message: result.message })
+      this.chatReplies.replaceChildren()
+      for (const reply of result.replies ?? []) {
+        const item = element('li')
+        item.textContent = `${reply.sender}: ${reply.text}`
+        this.chatReplies.append(item)
+      }
+      if (result.ok) this.chatText.value = ''
+    } catch (error) {
+      this.chatStatus.textContent = t('chat.error', { message: (error as Error).message })
+    } finally {
+      this.chatSend.disabled = false
     }
   }
 
@@ -727,6 +930,12 @@ export class Overlay {
   toggleAgentList(): void {
     this.agentPanel.hidden = !this.agentPanel.hidden
     if (!this.agentPanel.hidden) this.renderAgentList()
+  }
+
+  showAgentList(): void {
+    this.agentPanel.hidden = false
+    this.renderAgentList()
+    this.renderDetail()
   }
 
   toggleReplay(): void {

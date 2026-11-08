@@ -14,6 +14,8 @@ export interface CollectorConfig {
   fakeAgents: number
   pollMs: number
   staleAfterMs: number
+  traceEnabled: boolean
+  chatStateFile: string
 }
 
 export class ConfigError extends Error {}
@@ -63,5 +65,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): CollectorConfi
     fakeAgents: int(env.ATRIUM_FAKE_AGENTS, 50, 'ATRIUM_FAKE_AGENTS', 1, 200),
     pollMs: int(env.ATRIUM_POLL_MS, 1000, 'ATRIUM_POLL_MS', 200, 60_000),
     staleAfterMs: int(env.ATRIUM_STALE_AFTER_MS, 15_000, 'ATRIUM_STALE_AFTER_MS', 1000, 600_000),
+    traceEnabled: (env.ATRIUM_TRACE ?? '1') !== '0',
+    chatStateFile: env.ATRIUM_CHAT_STATE_FILE?.trim() || '.atrium-chat-state.json',
   }
 }

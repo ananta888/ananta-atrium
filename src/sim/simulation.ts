@@ -384,6 +384,53 @@ export class Simulation {
     }
   }
 
+  private fakeTrace(agentId: string): AgentState['trace'] {
+    const seed = hashString(agentId)
+    const usedMs = (seed % 900) * 1000
+    const tokensUsed = seed % 24000
+    const attempts = seed % 3
+    const withDiff = true
+    return {
+      attempts,
+      maxAttempts: 4,
+      budget: {
+        time: { unit: 'ms', limit: 30 * 60 * 1000, used: usedMs },
+        tokens: { unit: 'tokens', limit: 64000, used: tokensUsed },
+      },
+      events: [
+        {
+          at: new Date(this.startTimeMs + this.currentTick * this.tickSeconds * 1000 - 60_000).toISOString(),
+          kind: 'task',
+          summary: 'Working on the current step',
+        },
+        {
+          at: new Date(this.startTimeMs + this.currentTick * this.tickSeconds * 1000).toISOString(),
+          kind: 'budget',
+          summary: 'Budget sampled',
+        },
+      ],
+      ...(withDiff
+        ? {
+            diff: {
+              files: [
+                { path: 'src/app/session.ts', additions: 12, deletions: 4 },
+                { path: 'docs/architecture.md', additions: 3, deletions: 1 },
+              ],
+              additions: 15,
+              deletions: 5,
+              preview: [
+                '@@ -10,4 +10,6 @@',
+                '+  const trace = await loadTrace(agent)',
+                '-  const trace = null',
+                '+  renderMonitor(trace)',
+              ],
+              truncated: false,
+            },
+          }
+        : {}),
+    }
+  }
+
   snapshot(source: AgentSource = 'fake'): AgentState[] {
     const updatedAt = new Date(this.startTimeMs + this.currentTick * this.tickSeconds * 1000).toISOString()
     return [...this.agents.values()]
@@ -411,6 +458,10 @@ export class Simulation {
           source: live ? live.source : source,
           stale: live ? live.stale : agent.stale,
           position: clone(agent.position),
+        }
+        if (!live && source === 'fake') {
+          const trace = this.fakeTrace(agent.identity.id)
+          if (trace) state.trace = trace
         }
         if (live?.tokensPerSecond !== undefined) {
           state.metrics = { tokensPerSecond: live.tokensPerSecond }

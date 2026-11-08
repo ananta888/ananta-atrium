@@ -4,6 +4,9 @@ import { buildRoster } from '../src/sim/roster.js'
 import { Simulation } from '../src/sim/simulation.js'
 import { loadCampus } from '../src/world/campus-loader.js'
 import { AnantaHubSource } from './ananta-source.js'
+import { ChatBridge } from './chat.js'
+import { WorkerPoolSource } from './worker-pool.js'
+import type { OpsStatus } from '../src/shared/agent-state.js'
 import { loadConfig } from './config.js'
 import { LlamaMetricsSource } from './llama-source.js'
 import { startCollectorServer, type HealthReport } from './server.js'
@@ -26,10 +29,24 @@ let fakeSimulation: Simulation | null = null
 let fakeTimer: ReturnType<typeof setInterval> | null = null
 let livePollTimer: ReturnType<typeof setInterval> | null = null
 
+const workerPool =
+  config.source === 'live' && config.hubToken
+    ? new WorkerPoolSource({ baseUrl: config.hubUrl, token: config.hubToken })
+    : null
 const hub = config.source === 'live'
-  ? new AnantaHubSource({ baseUrl: config.hubUrl, token: config.hubToken, campus })
+  ? new AnantaHubSource({
+      baseUrl: config.hubUrl,
+      token: config.hubToken,
+      campus,
+      traceEnabled: config.traceEnabled,
+      ...(workerPool ? { leaseProvider: (taskId: string) => workerPool.leaseForTask(taskId) } : {}),
+    })
   : null
 const llama = new LlamaMetricsSource(config.llamaUrls)
+const chat = config.hubToken
+  ? new ChatBridge({ baseUrl: config.hubUrl, token: config.hubToken, stateFile: config.chatStateFile })
+  : null
+let ops: OpsStatus | null = null
 
 function distributeThroughput(tokensPerSecond: number): void {
   if (tokensPerSecond <= 0) return
@@ -62,6 +79,13 @@ if (config.source === 'fake') {
       }
       const tokensPerSecond = await llama.poll()
       distributeThroughput(tokensPerSecond)
+      if (workerPool) {
+        try {
+          ops = await workerPool.poll()
+        } catch (error) {
+          log('warn', 'worker pool unavailable', { error: (error as Error).message })
+        }
+      }
     } catch (error) {
       log('warn', 'hub poll failed', { error: (error as Error).message })
       agents = agents.map((agent) => ({ ...agent, stale: true }))
@@ -96,6 +120,17 @@ function health(): HealthReport {
         lastError: status.lastError,
         tokensPerSecond: Number(status.tokensPerSecond.toFixed(2)),
       })),
+      ...(workerPool
+        ? {
+            workerPool: {
+              reachable: workerPool.status.reachable,
+              lastError: workerPool.status.lastError,
+              lastSuccessAt: workerPool.status.lastSuccessAt
+                ? new Date(workerPool.status.lastSuccessAt).toISOString()
+                : null,
+            },
+          }
+        : {}),
     },
   }
 }
@@ -104,6 +139,8 @@ const server = startCollectorServer({
   config,
   getAgents: () => agents,
   getHealth: health,
+  getOps: () => ops,
+  ...(chat ? { chat } : {}),
 })
 
 const shutdown = async (signal: string): Promise<void> => {

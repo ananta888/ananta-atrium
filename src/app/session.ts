@@ -3,18 +3,19 @@ import { FixedStepDriver } from '../sim/clock.js'
 import { buildRoster } from '../sim/roster.js'
 import { Simulation } from '../sim/simulation.js'
 import { ReplayBuffer } from '../sim/replay.js'
-import type { AgentState } from '../shared/agent-state.js'
+import type { AgentState, OpsStatus } from '../shared/agent-state.js'
 import { campus } from '../world/campus.js'
 import { loadAsset, loadManifest } from '../world/assets.js'
 import { AvatarLayer } from '../render/avatar-layer.js'
 import { createRenderContext, type RenderContext } from '../render/engine.js'
 import { Hud } from '../render/hud.js'
 import { NavDebugLayer } from '../render/nav-debug.js'
+import { FocusedMonitor } from '../render/monitors.js'
 import { CampusWorld } from '../render/world-builder.js'
 import { StateClient, type ConnectionStatus } from '../net/state-client.js'
 import { FirstPersonController, type StairZone } from './controller.js'
 import { AudioDirector } from './audio.js'
-import { setLanguage } from './i18n.js'
+import { setLanguage, t } from './i18n.js'
 import { Overlay, type PlayerPose, type ReplayInfo } from './overlay.js'
 import {
   DEFAULT_SETTINGS,
@@ -40,6 +41,8 @@ export class AtriumSession {
   private hud!: Hud
   private overlay!: Overlay
   private navDebug!: NavDebugLayer
+  private monitor!: FocusedMonitor
+  private ops: OpsStatus | null = null
   private audio = new AudioDirector()
   private touch!: TouchControls
   private instrumentation!: SceneInstrumentation
@@ -86,6 +89,7 @@ export class AtriumSession {
     this.sim = new Simulation({ campus, roster: buildRoster(FAKE_AGENT_COUNT) })
     this.navDebug = new NavDebugLayer(this.render.scene)
     this.navDebug.build(this.sim.graph, campus)
+    this.monitor = new FocusedMonitor(this.render.scene, campus)
 
     const collectorParam = new URLSearchParams(window.location.search).get('collector') ?? this.settings.collectorUrl
     const initialUrl = this.spectator
@@ -99,6 +103,9 @@ export class AtriumSession {
         for (const id of ids) this.sim.removeAgent(id)
       },
       onStatus: (status) => this.onConnectionStatus(status),
+      onOps: (ops) => {
+        this.ops = ops
+      },
     })
 
     this.overlay = new Overlay(document.body, campus, this.settings, {
@@ -132,8 +139,9 @@ export class AtriumSession {
       },
       onFocusAgent: (id) => {
         this.focusedAgent = id
-        if (id) this.overlay.toggleAgentList()
+        if (id) this.overlay.showAgentList()
       },
+      onChat: (request) => this.sendChat(request),
     })
     this.controller.setEnabled(!this.spectator)
     if (this.spectator) this.overlay.hideMenu()
@@ -271,6 +279,65 @@ export class AtriumSession {
     }
   }
 
+  private httpBase(): string {
+    try {
+      const url = new URL(this.settings.collectorUrl)
+      return `${url.protocol === 'wss:' ? 'https:' : 'http:'}//${url.host}`
+    } catch {
+      return 'http://127.0.0.1:8787'
+    }
+  }
+
+  private async sendChat(request: {
+    agentId: string
+    taskId?: string
+    text: string
+    mode: 'ask' | 'steer'
+    steerMode: 'next_iteration_instruction' | 'pause_then_apply' | 'context_note_only'
+    instructionClass: 'correction' | 'constraint' | 'preference' | 'branch_hint' | 'stop_condition'
+  }): Promise<{ ok: boolean; message: string; replies?: Array<{ sender: string; text: string }> }> {
+    const base = this.httpBase()
+    try {
+      if (request.mode === 'steer') {
+        if (!request.taskId) return { ok: false, message: 'task id unknown' }
+        const response = await fetch(`${base}/steer`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            taskId: request.taskId,
+            text: request.text,
+            mode: request.steerMode,
+            instructionClass: request.instructionClass,
+          }),
+        })
+        const payload = (await response.json()) as { status?: string; error?: string; message?: string }
+        if (!response.ok) return { ok: false, message: payload.message ?? payload.error ?? `HTTP ${response.status}` }
+        return { ok: true, message: t('chat.steerAccepted', { status: payload.status ?? 'accepted' }) }
+      }
+      const response = await fetch(`${base}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agentId: request.agentId, text: request.text }),
+      })
+      const payload = (await response.json()) as {
+        status?: 'replied' | 'pending'
+        messages?: Array<{ sender: string; text: string }>
+        error?: string
+        message?: string
+      }
+      if (!response.ok) return { ok: false, message: payload.message ?? payload.error ?? `HTTP ${response.status}` }
+      const replies = payload.messages ?? []
+      if (replies.length === 0) return { ok: true, message: t('chat.pending') }
+      return {
+        ok: true,
+        message: payload.status === 'pending' ? t('chat.pending') : t('chat.emptyReply'),
+        replies,
+      }
+    } catch (error) {
+      return { ok: false, message: (error as Error).message || t('chat.noCollector') }
+    }
+  }
+
   private applySettings(settings: Settings): void {
     this.settings = settings
     setLanguage(settings.language)
@@ -345,6 +412,7 @@ export class AtriumSession {
       this.updateHud(shown)
       this.overlay.updateAgents(shown, this.playerPose())
       this.overlay.setReplay(this.replayInfo())
+      this.overlay.updateOps(this.ops ?? { active: [], queued: [] })
     }
 
     this.render.scene.render()
@@ -403,6 +471,7 @@ export class AtriumSession {
         }
       }
     }
+    this.monitor.setFocus(nearest)
     if (nearest) {
       const building = this.world.campus.buildings.find((b) => b.id === nearest?.buildingId)
       const room = building?.rooms.find((r) => r.id === nearest?.roomId)
@@ -431,6 +500,7 @@ export class AtriumSession {
     spectator: boolean
     replay: { frames: number; duration: number; active: boolean; recording: boolean }
     settings: Settings
+    queue: { active: number; queued: number }
   } {
     return {
       source: this.source,
@@ -460,6 +530,7 @@ export class AtriumSession {
         recording: this.replayRecording,
       },
       settings: this.settings,
+      queue: { active: this.ops?.active.length ?? 0, queued: this.ops?.queued.length ?? 0 },
     }
   }
 

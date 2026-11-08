@@ -129,6 +129,22 @@ Ananta hub. When several agents run on one runtime, the collector divides the
 measured throughput evenly across working agents — this is an approximation and
 is labelled as such in the UI.
 
+## Live trace, diffs, chat and queue
+
+| Need | Endpoint |
+|---|---|
+| Task detail/history/artifacts | `GET /api/tasks/<taskId>` |
+| Workspace diff | newest `workspace_diff` artifact via `GET /api/artifacts/<id>/content` |
+| Live file writes | `GET /api/sessions/<id>/tool-calls` |
+| Queue/leases | `GET /api/worker-pool/status`, `/queues`, `/leases` |
+| Side chat | `POST /snakes/<id>/chat/messages` (+ `/api/chat/sessions`) |
+| Work steering | `POST /api/tasks/<taskId>/commands` with `inject_instruction` |
+| Events | `GET /api/events/stream`, `/snakes/<id>/events/stream` |
+
+Side chat needs both credentials: the Snake token in `Authorization` and the
+user JWT in `X-Ananta-User-Authorization`. The collector stores Snake tokens in
+`.atrium-chat-state.json` (gitignored, mode 0600).
+
 ## Spectator control
 
 The collector exposes an operator-only revocation endpoint:

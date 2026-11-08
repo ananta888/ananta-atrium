@@ -1130,6 +1130,20 @@ export class CampusWorld {
       parts.push(leg)
     }
     for (const part of parts) part.material = this.woodMaterial
+
+    const stand = MeshBuilder.CreateBox('monitor-stand', { width: 0.08, height: 0.28, depth: 0.08 }, this.scene)
+    stand.position.set(0, 0.9, -0.22)
+    stand.material = this.woodMaterial
+    parts.push(stand)
+    const screenMaterial = new StandardMaterial('monitor-screen', this.scene)
+    screenMaterial.diffuseColor = new Color3(0.08, 0.12, 0.16)
+    screenMaterial.emissiveColor = new Color3(0.14, 0.34, 0.42)
+    screenMaterial.specularColor = new Color3(0.2, 0.3, 0.35)
+    const screen = MeshBuilder.CreateBox('monitor-screen', { width: 0.54, height: 0.34, depth: 0.04 }, this.scene)
+    screen.position.set(0, 1.08, -0.2)
+    screen.material = screenMaterial
+    parts.push(screen)
+
     const merged = Mesh.MergeMeshes(parts, true, true, undefined, false, false)
     if (!merged) throw new Error('failed to merge desk template')
     merged.name = 'desk-template'

@@ -1,5 +1,5 @@
 import type { AgentState } from '../shared/agent-state.js'
-import { isStateMessage, type StateMessage } from '../shared/agent-state.js'
+import { isStateMessage, type OpsStatus, type StateMessage } from '../shared/agent-state.js'
 
 export type ConnectionStatus = 'connecting' | 'live' | 'offline'
 
@@ -18,6 +18,7 @@ export interface StateClientOptions {
   onUpsert: (agents: AgentState[]) => void
   onRemove: (ids: string[]) => void
   onStatus: (status: ConnectionStatus) => void
+  onOps?: (ops: OpsStatus) => void
   /** How long to wait for the first frame before the UI calls the source fake. */
   fallbackDelayMs?: number
   /** Injectable for tests; defaults to the browser WebSocket. */
@@ -123,6 +124,9 @@ export class StateClient {
         break
       case 'remove':
         this.options.onRemove(message.ids)
+        break
+      case 'ops':
+        this.options.onOps?.(message.ops)
         break
       case 'heartbeat':
         break

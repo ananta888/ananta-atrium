@@ -16,6 +16,8 @@ const config: CollectorConfig = {
   fakeAgents: 1,
   pollMs: 1000,
   staleAfterMs: 15000,
+  traceEnabled: true,
+  chatStateFile: '.atrium-chat-state.test.json',
 }
 
 function agent(id: string): AgentState {
@@ -169,6 +171,57 @@ describe('collector server', () => {
     expect(normal.readyState).toBe(WebSocket.OPEN)
     spectator.close()
     normal.close()
+  })
+
+  it('proxies side chat and work steering', async () => {
+    const agents = [agent('a1')]
+    const calls: unknown[] = []
+    running = startCollectorServer({
+      config,
+      getAgents: () => agents,
+      getHealth: () => ({
+        status: 'ok',
+        version: '0.1.0',
+        source: 'fake',
+        agents: agents.length,
+        uptimeSeconds: 1,
+        lastSuccessfulPoll: null,
+        upstreams: { hub: { url: config.hubUrl, reachable: false, lastError: null, lastSuccessAt: null }, llama: [] },
+      }),
+      getOps: () => ({ generatedAt: new Date().toISOString(), active: [], queued: [] }),
+      chat: {
+        ask: async (input: unknown) => {
+          calls.push(input)
+          return { status: 'replied' as const, messages: [{ sender: 'agent', text: 'hello', at: new Date().toISOString() }] }
+        },
+        steer: async (input: unknown) => {
+          calls.push(input)
+          return { status: 'accepted', command: { status: 'accepted' } }
+        },
+      } as never,
+    })
+    const wsUrl = await running.ready
+    const base = wsUrl.replace('ws://', 'http://').replace('/stream', '')
+
+    const chatResponse = await fetch(`${base}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agentId: 'a1', text: 'status?' }),
+    })
+    expect(chatResponse.status).toBe(200)
+    expect((await chatResponse.json()) as { messages: unknown[] }).toMatchObject({ messages: [{ text: 'hello' }] })
+
+    const steerResponse = await fetch(`${base}/steer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ taskId: 'task-1', text: 'fix it', mode: 'pause_then_apply' }),
+    })
+    expect(steerResponse.status).toBe(200)
+    expect((await steerResponse.json()) as { status: string }).toMatchObject({ status: 'accepted' })
+    expect(calls).toHaveLength(2)
+
+    const opsResponse = await fetch(`${base}/ops`)
+    expect((await opsResponse.json()) as { active: unknown[] }).toMatchObject({ active: [] })
   })
 
   it('reports degraded health with 503 when upstreams are down', async () => {

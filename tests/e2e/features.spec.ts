@@ -42,6 +42,26 @@ test('menu opens the demo scene and the agent list filters by status', async ({ 
   await page.keyboard.press('KeyL')
 })
 
+test('agent detail shows trace, budget, diff and a desk monitor', async ({ page }) => {
+  await openDemo(page)
+  await page.keyboard.press('KeyL')
+  await page.locator('.ui-agent').first().evaluate((node) => (node as HTMLButtonElement).click())
+  await expect(page.locator('.ui-detail')).toBeVisible()
+  await expect(page.getByText(/Time budget|Zeitbudget/)).toBeVisible()
+  await expect(page.getByText(/Attempts|Versuche/)).toBeVisible()
+  expect(await page.locator('.ui-meter').count()).toBeGreaterThanOrEqual(2)
+  expect((await page.locator('.ui-pre').innerText()).length).toBeGreaterThan(20)
+  await expect(page.getByPlaceholder('Message…')).toBeVisible()
+  await page.waitForTimeout(600)
+  const monitor = await page.evaluate(() => {
+    const session = window.__atrium as unknown as {
+      render: { scene: { getMeshByName: (name: string) => { isEnabled: () => boolean } | null } }
+    }
+    return session.render.scene.getMeshByName('focused-monitor-plane')?.isEnabled() ?? false
+  })
+  expect(monitor).toBe(true)
+})
+
 test('replay records frames, scrubs and returns live', async ({ page }) => {
   await openDemo(page)
   await page.keyboard.press('KeyR')

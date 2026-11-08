@@ -246,7 +246,7 @@
 
 .ui-panel {
   position: absolute;
-  top: 16px;
+  top: 64px;
   right: 16px;
   width: min(390px, calc(100vw - 32px));
   max-height: calc(100vh - 120px);
@@ -446,4 +446,95 @@
   .ui-root * {
     transition: none !important;
   }
+}
+
+.ui-detail {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--ui-border);
+  display: grid;
+  gap: 8px;
+}
+
+.ui-detail-title {
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.ui-budgets {
+  display: grid;
+  gap: 8px;
+}
+
+.ui-meter-track {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.ui-meter-fill {
+  height: 100%;
+  background: var(--ui-accent);
+  border-radius: 999px;
+}
+
+.ui-pre {
+  margin: 0;
+  max-height: 150px;
+  overflow: auto;
+  padding: 10px;
+  border-radius: var(--ui-radius-sm);
+  background: rgba(4, 8, 12, 0.8);
+  border: 1px solid var(--ui-border);
+  color: #c6d6e4;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.ui-events {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--ui-muted);
+  max-height: 140px;
+  overflow: auto;
+}
+
+.ui-chat {
+  display: grid;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.ui-chat-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ui-chat-controls select {
+  flex: 1 1 120px;
+}
+
+.ui-textarea {
+  width: 100%;
+  min-height: 58px;
+  resize: vertical;
+  background: rgba(6, 10, 16, 0.85);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-sm);
+  padding: 10px 12px;
+  color: var(--ui-text);
+  font: inherit;
+}
+
+.ui-textarea:focus-visible {
+  outline: 3px solid var(--ui-accent-2);
+  outline-offset: 1px;
 }

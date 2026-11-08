@@ -35,7 +35,8 @@
     "Art style is archviz-realistic with baked lighting, not photoreal.",
     "Target hardware: desktop browser with a mid-range dGPU or recent iGPU.",
     "The Ananta hub (local Docker stack) requires authentication; the collector uses a dedicated token, never the browser.",
-    "llama.cpp runtimes in the Ananta stack are not guaranteed on port 8080; real ports come from stack config, not defaults."
+    "llama.cpp runtimes in the Ananta stack are not guaranteed on port 8080; real ports come from stack config, not defaults.",
+    "Atrium visualises the Ananta hub; it never owns task state or the LLM queue."
   ],
   "open_questions": [
     "Which exact source provides per-agent identity and task text (Ananta hub API vs. OpenCode session API) — reference documented in AT-110, decision in AT-103.",
@@ -143,6 +144,25 @@
         "AT-501",
         "AT-502",
         "AT-503"
+      ]
+    },
+    {
+      "id": "M6",
+      "title": "Live operations trace — tasks, budgets, diffs, chat and LLM queue",
+      "description": "Live operations view of the Ananta hub: task budgets, retries and workspace diffs on desk monitors, two chat modes (side conversation vs work instruction), LLM queue visibility, and an interactive priority lane on the local eGPU.",
+      "status": "in_progress",
+      "task_ids": [
+        "AT-600",
+        "AT-601",
+        "AT-602",
+        "AT-603",
+        "AT-604",
+        "AT-605",
+        "AT-606",
+        "AT-607",
+        "AT-608",
+        "AT-609",
+        "AT-610"
       ]
     }
   ],
@@ -1290,6 +1310,248 @@
         "No hard-coded user-facing string remains in components (lint check)."
       ],
       "notes": "en/de dictionaries with parity check, persisted switch without reload and a lint gate against literal UI strings."
+    },
+    {
+      "id": "AT-600",
+      "title": "Extend AgentState with trace, budget, attempts and diff",
+      "type": "data",
+      "milestone": "M6",
+      "status": "done",
+      "priority": "P0",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-100"
+      ],
+      "acceptance_criteria": [
+        "AgentState carries taskId, sessionId, budget (time/token/cost limit and used), attempts/maxAttempts and a diff summary without breaking v1 clients.",
+        "Budget values are optional and explicitly nullable; the UI renders unknown instead of zero.",
+        "Schema and TypeScript guards accept old states and reject malformed trace objects.",
+        "Collector and client round-trip a state with trace data in tests."
+      ],
+      "notes": "Optional trace block in AgentState + JSON Schema; old states still validate; parsers and schema tests added."
+    },
+    {
+      "id": "AT-601",
+      "title": "Collector trace enrichment from task detail",
+      "type": "data",
+      "milestone": "M6",
+      "status": "done",
+      "priority": "P0",
+      "risk": "high",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-600",
+        "AT-103"
+      ],
+      "acceptance_criteria": [
+        "Collector calls GET /api/tasks/<taskId> and maps history, artifacts, verification and linked sessions into AgentState.",
+        "Attempts/retries are derived from task history and verification; time budget uses worker lease acquired_at/deadline_at when present.",
+        "Token/cost budget uses the hub cost/turn accounting when present; absent fields stay unknown.",
+        "Per-field degradation is tested with fixtures; a task-detail failure does not hide the agent."
+      ],
+      "notes": "Collector enriches sessions from /api/tasks/<id> (history, artifacts, verification) with per-field degradation and fixture tests; live mapping pending AT-609."
+    },
+    {
+      "id": "AT-602",
+      "title": "Diff ingestion for agent file changes",
+      "type": "data",
+      "milestone": "M6",
+      "status": "done",
+      "priority": "P0",
+      "risk": "high",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-601"
+      ],
+      "acceptance_criteria": [
+        "The collector selects the newest workspace_diff artifact (text/x-diff) for the task and fetches it via GET /api/artifacts/<id>/content.",
+        "Changed files, additions/deletions and a bounded unified-diff preview are exposed in AgentState.",
+        "Session tool-calls provide the live 'writing file X' signal before the diff artifact exists.",
+        "Content is truncated and redacted locally; diff content never leaves the machine and failures are per-agent explicit."
+      ],
+      "notes": "Newest workspace_diff artifact fetched via /api/artifacts/<id>/content, parsed into file stats and bounded preview; tool-calls add live file-change events; tests cover parsing."
+    },
+    {
+      "id": "AT-603",
+      "title": "Virtual desk monitors",
+      "type": "render",
+      "milestone": "M6",
+      "status": "done",
+      "priority": "P0",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-601",
+        "AT-200"
+      ],
+      "acceptance_criteria": [
+        "Every desk has a monitor mesh; the nearest/focused agent's monitor renders task title, progress, time and token budget bars plus retry count.",
+        "A focused monitor shows the latest diff lines with file name and +/- counts.",
+        "Monitor textures update at most 2 Hz and are released when rooms are culled.",
+        "Readability is verified at 1080p from a seated camera distance."
+      ],
+      "notes": "Every desk has a monitor mesh; the focused agent monitor renders task, progress, time/token budgets, attempts and diff lines at 2 Hz."
+    },
+    {
+      "id": "AT-604",
+      "title": "Agent trace and budget detail panel",
+      "type": "product",
+      "milestone": "M6",
+      "status": "done",
+      "priority": "P0",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-601",
+        "AT-208"
+      ],
+      "acceptance_criteria": [
+        "Clicking an agent (or its monitor) opens a panel with task, status, elapsed/limit time, token budget, attempts/max attempts and verification.",
+        "A timeline lists recent history events with timestamps; artifacts and the current diff are linked.",
+        "The panel updates live and shows explicit unknown values instead of zeros."
+      ],
+      "notes": "Agent panel shows trace, budget meters, attempts, diff and recent events, updating live without blocking the scene."
+    },
+    {
+      "id": "AT-605",
+      "title": "Side chat with an agent (AI-Snake conversation)",
+      "type": "product",
+      "milestone": "M6",
+      "status": "done",
+      "priority": "P0",
+      "risk": "high",
+      "progress_percent": 100,
+      "estimate": "2d",
+      "depends_on": [
+        "AT-103",
+        "AT-604"
+      ],
+      "acceptance_criteria": [
+        "Each visual agent gets a stable Ananta Snake identity (auto-created on demand) with the mapping persisted in collector state, not in the repository.",
+        "Messages use POST /snakes/<snakeId>/chat/messages with a chat session; replies and traces arrive without reload.",
+        "Side chat never injects into or alters the task session; the agent keeps working.",
+        "Cancel, ack, rate-limit and authorization failures are explicit in the panel."
+      ],
+      "notes": "AI-Snake side chat: auto-created per-agent snake, persisted mapping/token in local state, chat session creation, send + reply polling; unit tests cover creation, reuse and headers."
+    },
+    {
+      "id": "AT-606",
+      "title": "LLM worker pool and queue visibility",
+      "type": "data",
+      "milestone": "M6",
+      "status": "done",
+      "priority": "P0",
+      "risk": "medium",
+      "progress_percent": 100,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-101",
+        "AT-104"
+      ],
+      "acceptance_criteria": [
+        "Collector polls /api/worker-pool/status, /worker-pool/queues and /worker-pool/leases and exposes active jobs, queue positions, model capacity and lease deadlines.",
+        "HUD shows queue length, the current eGPU/model occupier and interactive-lane state; stale data is labelled.",
+        "Queue data is read-only; Atrium never invents or fakes scheduling state."
+      ],
+      "notes": "Collector polls worker-pool status/queues/leases and broadcasts ops snapshots; HUD shows active/queued counts; tests cover mapping and degradation."
+    },
+    {
+      "id": "AT-607",
+      "title": "Interactive chat priority lane on the eGPU (Option A)",
+      "type": "foundation",
+      "milestone": "M6",
+      "status": "partial",
+      "priority": "P0",
+      "risk": "critical",
+      "progress_percent": 35,
+      "estimate": "3d",
+      "depends_on": [
+        "AT-605",
+        "AT-606"
+      ],
+      "acceptance_criteria": [
+        "Ananta worker-pool leases gain a priority/lease_class; queued jobs are ordered interactive-before-background and one interactive slot is reserved.",
+        "A user chat requests an interactive lease; after the reply the lease is released and queued background work resumes.",
+        "Measured time-to-first-token for chat stays under the documented threshold while the background queue is saturated.",
+        "If the reserved-slot approach misses the threshold, the ADR records the fallback to a dedicated small chat model.",
+        "An ADR records fairness, starvation protection, rollback and the exact Ananta changes."
+      ],
+      "notes": "Atrium side is ready to display and request an interactive lane, but Ananta still lacks lease priority/reserved slot; exact patch and latency measurements remain."
+    },
+    {
+      "id": "AT-608",
+      "title": "SSE event ingestion and trace timeline",
+      "type": "data",
+      "milestone": "M6",
+      "status": "partial",
+      "priority": "P1",
+      "risk": "medium",
+      "progress_percent": 30,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-104"
+      ],
+      "acceptance_criteria": [
+        "Collector consumes GET /api/events/stream with Last-Event-ID, reconnects with backoff and maps task/session events into trace entries.",
+        "Polling remains the fallback; duplicate events are deduplicated by event id.",
+        "Event lag is exposed in /health and the HUD."
+      ],
+      "notes": "Polling fallback covers events today; SSE ingestion with Last-Event-ID is not implemented yet."
+    },
+    {
+      "id": "AT-609",
+      "title": "Live operations acceptance against a running hub",
+      "type": "qa",
+      "milestone": "M6",
+      "status": "blocked",
+      "priority": "P0",
+      "risk": "high",
+      "progress_percent": 20,
+      "estimate": "1d",
+      "depends_on": [
+        "AT-602",
+        "AT-603",
+        "AT-604",
+        "AT-605",
+        "AT-607",
+        "AT-608",
+        "AT-610"
+      ],
+      "acceptance_criteria": [
+        "With a live hub, five agents show real task titles, budgets, attempts, diffs and chat replies without a reload.",
+        "Queue state reflects the eGPU and a chat reply completes before background work resumes.",
+        "Killing the collector falls back to the labelled fake source within 2 s; restart resumes.",
+        "Evidence is recorded in the task notes with date, hub commit and measurements."
+      ],
+      "notes": "End-to-end acceptance needs a valid hub token and the AT-607 scheduling change."
+    },
+    {
+      "id": "AT-610",
+      "title": "Work-steering chat via inject_instruction",
+      "type": "product",
+      "milestone": "M6",
+      "status": "done",
+      "priority": "P0",
+      "risk": "high",
+      "progress_percent": 100,
+      "estimate": "1.5d",
+      "depends_on": [
+        "AT-601",
+        "AT-604"
+      ],
+      "acceptance_criteria": [
+        "A separate 'Steer task' action posts POST /api/tasks/<taskId>/commands with type inject_instruction.",
+        "The user chooses mode (next_iteration_instruction, pause_then_apply, context_note_only) and instruction_class; defaults are documented.",
+        "The UI shows accepted/applied/rejected state and never presents the instruction as a side-chat reply.",
+        "An audit trail lists who injected which instruction and when."
+      ],
+      "notes": "Separate Steer action posts inject_instruction with mode and instruction_class; UI distinguishes it from side chat; tests assert the payload."
     }
   ],
   "critical_path_tasks": [
@@ -1312,45 +1574,56 @@
     "AT-302",
     "AT-306",
     "AT-307",
-    "AT-308"
+    "AT-308",
+    "AT-600",
+    "AT-601",
+    "AT-602",
+    "AT-603",
+    "AT-604",
+    "AT-605",
+    "AT-606",
+    "AT-607",
+    "AT-608",
+    "AT-609",
+    "AT-610"
   ],
   "tasks_status_summary": {
-    "total": 54,
+    "total": 65,
     "by_status": {
       "todo": 0,
       "in_progress": 0,
-      "partial": 5,
-      "blocked": 1,
-      "done": 48
+      "partial": 7,
+      "blocked": 2,
+      "done": 56
     },
-    "progress_percent_done": 88.9,
+    "progress_percent_done": 86.2,
     "by_priority": {
-      "P0": 32,
-      "P1": 16,
+      "P0": 42,
+      "P1": 17,
       "P2": 4,
       "P3": 2
     },
     "by_risk": {
-      "critical": 1,
-      "high": 14,
+      "critical": 2,
+      "high": 19,
       "low": 15,
-      "medium": 24
+      "medium": 29
     },
     "critical_path": {
-      "total": 20,
-      "done": 18,
-      "remaining": 2
+      "total": 31,
+      "done": 26,
+      "remaining": 5
     },
     "milestones": {
-      "total": 6,
+      "total": 7,
       "todo": 0,
-      "in_progress": 5,
+      "in_progress": 6,
       "blocked": 0,
       "done": 1
     }
   },
   "tasks_type_summary": {
-    "total": 54,
+    "total": 65,
     "by_type": {
       "bootstrap": {
         "total": 1,
@@ -1367,18 +1640,18 @@
         "progress_percent": 100.0
       },
       "data": {
-        "total": 8,
-        "done": 8,
-        "partial": 0,
+        "total": 13,
+        "done": 12,
+        "partial": 1,
         "blocked": 0,
         "by_status": {
           "todo": 0,
           "in_progress": 0,
-          "partial": 0,
+          "partial": 1,
           "blocked": 0,
-          "done": 8
+          "done": 12
         },
-        "progress_percent": 100.0
+        "progress_percent": 92.3
       },
       "docs": {
         "total": 4,
@@ -1395,18 +1668,18 @@
         "progress_percent": 100.0
       },
       "foundation": {
-        "total": 2,
+        "total": 3,
         "done": 2,
-        "partial": 0,
+        "partial": 1,
         "blocked": 0,
         "by_status": {
           "todo": 0,
           "in_progress": 0,
-          "partial": 0,
+          "partial": 1,
           "blocked": 0,
           "done": 2
         },
-        "progress_percent": 100.0
+        "progress_percent": 66.7
       },
       "gameplay": {
         "total": 5,
@@ -1423,8 +1696,8 @@
         "progress_percent": 100.0
       },
       "product": {
-        "total": 7,
-        "done": 5,
+        "total": 10,
+        "done": 8,
         "partial": 2,
         "blocked": 0,
         "by_status": {
@@ -1432,23 +1705,23 @@
           "in_progress": 0,
           "partial": 2,
           "blocked": 0,
-          "done": 5
+          "done": 8
         },
-        "progress_percent": 71.4
+        "progress_percent": 80.0
       },
       "qa": {
-        "total": 7,
+        "total": 8,
         "done": 4,
         "partial": 2,
-        "blocked": 1,
+        "blocked": 2,
         "by_status": {
           "todo": 0,
           "in_progress": 0,
           "partial": 2,
-          "blocked": 1,
+          "blocked": 2,
           "done": 4
         },
-        "progress_percent": 57.1
+        "progress_percent": 50.0
       },
       "release": {
         "total": 2,
@@ -1465,8 +1738,8 @@
         "progress_percent": 100.0
       },
       "render": {
-        "total": 9,
-        "done": 8,
+        "total": 10,
+        "done": 9,
         "partial": 1,
         "blocked": 0,
         "by_status": {
@@ -1474,9 +1747,9 @@
           "in_progress": 0,
           "partial": 1,
           "blocked": 0,
-          "done": 8
+          "done": 9
         },
-        "progress_percent": 88.9
+        "progress_percent": 90.0
       },
       "research": {
         "total": 2,
@@ -1512,9 +1785,9 @@
     "state": "blocked",
     "todo_remaining": 0,
     "in_progress": 0,
-    "partial": 5,
-    "blocked": 1,
-    "done": 48
+    "partial": 7,
+    "blocked": 2,
+    "done": 56
   },
   "execution_stage_summary": {
     "current_milestone": "M0",

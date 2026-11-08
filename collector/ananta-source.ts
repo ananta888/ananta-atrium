@@ -3,6 +3,7 @@ import { AGENT_STATE_SCHEMA_VERSION } from '../src/shared/agent-state.js'
 import type { CampusDef } from '../src/shared/campus.js'
 import { hashString } from '../src/sim/rng.js'
 import { log } from './logger.js'
+import { buildTrace, parseUnifiedDiff, pickWorkspaceDiffArtifact } from './trace.js'
 
 export interface HubSession {
   id: string
@@ -25,7 +26,12 @@ export interface HubTask {
   priority?: string
 }
 
-export interface UpstreamStatus {
+export interface TaskDetailCacheEntry {
+  at: number
+  value: unknown
+}
+
+interface UpstreamStatus {
   reachable: boolean
   lastError: string | null
   lastSuccessAt: number | null
@@ -133,12 +139,26 @@ export class AnantaHubSource {
   private readonly token: string | null
   private readonly campus: CampusDef
   private readonly fetcher: typeof fetch
+  private readonly traceEnabled: boolean
+  private readonly leaseProvider: ((taskId: string) => { acquired_at: number; deadline_at: number } | null) | undefined
+  private readonly detailCache = new Map<string, TaskDetailCacheEntry>()
+  private readonly diffCache = new Map<string, { at: number; text: string }>()
+  private readonly toolCallCache = new Map<string, { at: number; value: unknown }>()
 
-  constructor(options: { baseUrl: string; token: string | null; campus: CampusDef; fetcher?: typeof fetch }) {
+  constructor(options: {
+    baseUrl: string
+    token: string | null
+    campus: CampusDef
+    fetcher?: typeof fetch
+    traceEnabled?: boolean
+    leaseProvider?: (taskId: string) => { acquired_at: number; deadline_at: number } | null
+  }) {
     this.baseUrl = options.baseUrl
     this.token = options.token
     this.campus = options.campus
     this.fetcher = options.fetcher ?? fetch
+    this.traceEnabled = options.traceEnabled ?? true
+    this.leaseProvider = options.leaseProvider
   }
 
   private async getJson(path: string): Promise<unknown> {
@@ -149,6 +169,112 @@ export class AnantaHubSource {
     })
     if (!response.ok) throw new Error(`${path} returned ${response.status}`)
     return response.json()
+  }
+
+  private unwrapData(payload: unknown): unknown {
+    if (typeof payload !== 'object' || payload === null) return payload
+    const data = (payload as Record<string, unknown>).data
+    return data ?? payload
+  }
+
+  private async getText(path: string): Promise<string> {
+    if (!this.token) throw new Error('ATRIUM_HUB_TOKEN is not configured')
+    const response = await this.fetcher(`${this.baseUrl}${path}`, {
+      headers: { Authorization: `Bearer ${this.token}`, Accept: 'text/plain' },
+      signal: AbortSignal.timeout(4000),
+    })
+    if (!response.ok) throw new Error(`${path} returned ${response.status}`)
+    const text = await response.text()
+    return text.slice(0, 200_000)
+  }
+
+  private async taskDetail(taskId: string): Promise<unknown> {
+    const cached = this.detailCache.get(taskId)
+    if (cached && Date.now() - cached.at < 5000) return cached.value
+    const value = this.unwrapData(await this.getJson(`/api/tasks/${encodeURIComponent(taskId)}`))
+    this.detailCache.set(taskId, { at: Date.now(), value })
+    return value
+  }
+
+  private async toolCalls(sessionId: string): Promise<unknown> {
+    const cached = this.toolCallCache.get(sessionId)
+    if (cached && Date.now() - cached.at < 4000) return cached.value
+    const value = this.unwrapData(await this.getJson(`/api/sessions/${encodeURIComponent(sessionId)}/tool-calls`))
+    this.toolCallCache.set(sessionId, { at: Date.now(), value })
+    return value
+  }
+
+  private async diffText(artifactId: string): Promise<string> {
+    const cached = this.diffCache.get(artifactId)
+    if (cached && Date.now() - cached.at < 10_000) return cached.text
+    const text = await this.getText(`/api/artifacts/${encodeURIComponent(artifactId)}/content`)
+    this.diffCache.set(artifactId, { at: Date.now(), text })
+    return text
+  }
+
+  private async enrich(agents: AgentState[]): Promise<AgentState[]> {
+    if (!this.traceEnabled) return agents
+    const now = Date.now()
+    const taskIds = [...new Set(agents.map((agent) => agent.task.taskId).filter((id): id is string => Boolean(id)))]
+    const details = new Map<string, unknown>()
+    const chunks: string[][] = []
+    for (let index = 0; index < taskIds.length; index += 4) chunks.push(taskIds.slice(index, index + 4))
+    for (const chunk of chunks) {
+      await Promise.all(
+        chunk.map(async (taskId) => {
+          try {
+            details.set(taskId, await this.taskDetail(taskId))
+          } catch (error) {
+            log('warn', 'task detail unavailable', { taskId, error: (error as Error).message })
+          }
+        }),
+      )
+    }
+
+    const enriched: AgentState[] = []
+    let toolCallBudget = 20
+    for (const agent of agents) {
+      const taskId = agent.task.taskId
+      if (!taskId) {
+        enriched.push(agent)
+        continue
+      }
+      const detail = details.get(taskId)
+      let diff
+      const artifact = pickWorkspaceDiffArtifact(
+        typeof detail === 'object' && detail !== null
+          ? (detail as Record<string, unknown>).artifacts
+          : undefined,
+      )
+      if (artifact) {
+        try {
+          const parsed = parseUnifiedDiff(await this.diffText(artifact.id))
+          diff = { ...parsed, artifactId: artifact.id }
+        } catch (error) {
+          log('warn', 'workspace diff unavailable', { taskId, error: (error as Error).message })
+        }
+      }
+      let toolCalls: unknown
+      if (toolCallBudget > 0) {
+        try {
+          toolCalls = await this.toolCalls(agent.id)
+          toolCallBudget -= 1
+        } catch (error) {
+          log('warn', 'tool calls unavailable', { sessionId: agent.id, error: (error as Error).message })
+        }
+      }
+      const trace = buildTrace({
+        taskDetail: detail,
+        ...(diff ? { diff } : {}),
+        lease: this.leaseProvider?.(taskId) ?? null,
+        ...(toolCalls !== undefined ? { toolCalls } : {}),
+        taskId,
+        sessionId: agent.id,
+        nowMs: now,
+      })
+      enriched.push(trace ? { ...agent, trace } : agent)
+    }
+    return enriched
   }
 
   async poll(): Promise<AgentState[]> {
@@ -169,9 +295,10 @@ export class AnantaHubSource {
       this.status.reachable = true
       this.status.lastError = null
       this.status.lastSuccessAt = now
-      return sessions.map((session) =>
+      const mapped = sessions.map((session) =>
         mapSessionToAgent(session, session.task_id ? taskById.get(session.task_id) : undefined, this.campus, now),
       )
+      return this.enrich(mapped)
     } catch (error) {
       this.status.reachable = false
       this.status.lastError = (error as Error).message

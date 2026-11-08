@@ -28,6 +28,18 @@ npm run collector:dev  # http://127.0.0.1:8787/health
 Live mode needs `ATRIUM_SOURCE=live`, `ATRIUM_HUB_URL` and `ATRIUM_HUB_TOKEN`
 (or `_FILE`). See [`docs/integration-ananta.md`](docs/integration-ananta.md).
 
+## Live operations (M6)
+
+With a running hub and token, agents expose their real work: current task,
+progress, time/token budgets, retry attempts, recent events and the newest
+workspace diff. The selected agent's desk monitor renders the same trace, and
+the detail panel offers two clearly separated chat modes: **Ask** (AI-Snake side
+conversation, never touches the task) and **Steer task** (`inject_instruction`).
+The worker-pool queue is shown read-only; interactive eGPU priority is the
+remaining Ananta-side change.
+
+![Trace panel](docs/screenshots/trace.png)
+
 ## Features
 
 - **Walkable campus** — five buildings, stairs, rooms, plaza, trees and outdoor
