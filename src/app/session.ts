@@ -63,6 +63,7 @@ export class AtriumSession {
   private remoteActive = false
   private lastHudUpdate = 0
   private debugHideAvatars = false
+  private debugPaused = false
   private previousPosition = new Vector3(4, 1.7, 30)
   private cullStats = { visibleRooms: 0, totalRooms: 0 }
 
@@ -170,6 +171,7 @@ export class AtriumSession {
       load: async (url) =>
         new Texture(url, this.render.scene, false, false, Texture.TRILINEAR_SAMPLINGMODE),
     })) as Texture
+    texture.gammaSpace = false
     texture.uScale = 24
     texture.vScale = 24
     this.world.setPlazaTexture(texture)
@@ -292,7 +294,9 @@ export class AtriumSession {
     const deltaSeconds = Math.min(this.render.engine.getDeltaTime() / 1000, 0.1)
     const now = performance.now()
 
-    if (this.replayPlaying) {
+    if (this.debugPaused) {
+      // QA/screenshot hook: freeze simulation and player input.
+    } else if (this.replayPlaying) {
       this.replayTime += deltaSeconds
       const end = this.replay.firstTime + this.replay.duration
       if (this.replayTime >= end) {
@@ -311,7 +315,7 @@ export class AtriumSession {
       )
       this.controller.camera.setTarget(new Vector3(4, 2, 8))
     } else {
-      this.controller.update(deltaSeconds)
+      if (!this.debugPaused) this.controller.update(deltaSeconds)
     }
 
     const simulated = this.sim.snapshot(this.source)
@@ -466,6 +470,10 @@ export class AtriumSession {
 
   debugFace(yaw: number): void {
     this.controller.setYaw(yaw)
+  }
+
+  debugPause(paused: boolean): void {
+    this.debugPaused = paused
   }
 
   debugShowMenu(visible: boolean): void {

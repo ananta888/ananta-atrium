@@ -25,12 +25,24 @@ export interface CullingStats {
 export type Quality = 'low' | 'medium' | 'high'
 
 const ROOM_ACCENTS: Record<RoomDef['kind'], Color3> = {
-  office: new Color3(0.35, 0.5, 0.7),
-  meeting: new Color3(0.75, 0.58, 0.3),
-  social: new Color3(0.55, 0.72, 0.45),
-  service: new Color3(0.55, 0.55, 0.6),
-  lobby: new Color3(0.7, 0.68, 0.62),
-  corridor: new Color3(0.6, 0.6, 0.62),
+  office: new Color3(0.56, 0.72, 0.95),
+  meeting: new Color3(0.96, 0.78, 0.42),
+  social: new Color3(0.62, 0.84, 0.64),
+  service: new Color3(0.79, 0.73, 0.92),
+  lobby: new Color3(0.96, 0.83, 0.62),
+  corridor: new Color3(0.82, 0.82, 0.88),
+}
+
+const BUILDING_ACCENTS: Record<string, Color3> = {
+  'atrium-hq': new Color3(0.17, 0.7, 0.64),
+  forge: new Color3(0.94, 0.44, 0.35),
+  observatory: new Color3(0.31, 0.56, 0.97),
+  library: new Color3(0.95, 0.71, 0.27),
+  studio: new Color3(0.61, 0.48, 0.83),
+}
+
+function accentFor(buildingId: string): Color3 {
+  return BUILDING_ACCENTS[buildingId] ?? new Color3(0.35, 0.7, 0.65)
 }
 
 function localToWorld(origin: Vec3, x: number, y: number, z: number): Vector3 {
@@ -203,6 +215,7 @@ export class CampusWorld {
     const texture = new DynamicTexture(name, { width: size, height: size }, this.scene, false)
     const context = texture.getContext() as unknown as CanvasRenderingContext2D
     draw(context, size)
+    texture.gammaSpace = false
     texture.update()
     return texture
   }
@@ -224,24 +237,24 @@ export class CampusWorld {
       material.maxSimultaneousLights = 8
       return material
     }
-    this.wallMaterial = solid('wall', new Color3(0.84, 0.83, 0.79))
-    this.floorMaterial = solid('floor', new Color3(0.42, 0.34, 0.27))
-    this.roofMaterial = solid('roof', new Color3(0.24, 0.25, 0.28))
-    this.groundMaterial = solid('ground', new Color3(0.22, 0.31, 0.21))
-    this.stoneMaterial = solid('stone', new Color3(0.55, 0.52, 0.47))
-    this.woodMaterial = solid('wood', new Color3(0.32, 0.23, 0.16))
-    this.plazaMaterial = solid('plaza', new Color3(0.62, 0.6, 0.56))
+    this.wallMaterial = solid('wall', new Color3(0.98, 0.96, 0.92))
+    this.floorMaterial = solid('floor', new Color3(0.78, 0.62, 0.44))
+    this.roofMaterial = solid('roof', new Color3(0.55, 0.63, 0.72))
+    this.groundMaterial = solid('ground', new Color3(0.55, 0.75, 0.42))
+    this.stoneMaterial = solid('stone', new Color3(0.85, 0.82, 0.76))
+    this.woodMaterial = solid('wood', new Color3(0.72, 0.53, 0.34))
+    this.plazaMaterial = solid('plaza', new Color3(0.86, 0.83, 0.77))
 
     const wallTexture = this.makeSurfaceTexture('wall-texture', 256, (context, size) => {
       const random = this.rng(7)
-      context.fillStyle = '#d3d1ca'
+      context.fillStyle = '#fbf8f2'
       context.fillRect(0, 0, size, size)
       for (let i = 0; i < 2600; i++) {
         const shade = 190 + Math.floor(random() * 40)
         context.fillStyle = `rgba(${shade}, ${shade - 2}, ${shade - 6}, 0.25)`
         context.fillRect(random() * size, random() * size, 1, 1)
       }
-      context.strokeStyle = 'rgba(150, 148, 142, 0.5)'
+      context.strokeStyle = 'rgba(220, 214, 203, 0.8)'
       context.lineWidth = 1
       for (let x = 0; x <= size; x += 64) {
         context.beginPath()
@@ -257,7 +270,7 @@ export class CampusWorld {
 
     const floorTexture = this.makeSurfaceTexture('floor-texture', 512, (context, size) => {
       const random = this.rng(11)
-      context.fillStyle = '#9a6f47'
+      context.fillStyle = '#c99763'
       context.fillRect(0, 0, size, size)
       const plank = 64
       for (let y = 0; y < size; y += plank) {
@@ -286,7 +299,7 @@ export class CampusWorld {
 
     const groundTexture = this.makeSurfaceTexture('ground-texture', 512, (context, size) => {
       const random = this.rng(23)
-      context.fillStyle = '#6f9a58'
+      context.fillStyle = '#8fc46b'
       context.fillRect(0, 0, size, size)
       for (let i = 0; i < 9000; i++) {
         const green = 70 + Math.floor(random() * 70)
@@ -304,11 +317,11 @@ export class CampusWorld {
 
     const woodTexture = this.makeSurfaceTexture('wood-texture', 256, (context, size) => {
       const random = this.rng(31)
-      context.fillStyle = '#865c39'
+      context.fillStyle = '#b9895a'
       context.fillRect(0, 0, size, size)
       for (let i = 0; i < 90; i++) {
-        context.strokeStyle = `rgba(${40 + random() * 40}, ${25 + random() * 30}, ${15 + random() * 20}, ${0.15 + random() * 0.25})`
-        context.lineWidth = 0.6 + random() * 1.6
+        context.strokeStyle = `rgba(${70 + random() * 30}, ${50 + random() * 25}, ${35 + random() * 20}, ${0.05 + random() * 0.08})`
+        context.lineWidth = 0.5 + random() * 0.8
         context.beginPath()
         const y = random() * size
         context.moveTo(0, y)
@@ -321,12 +334,12 @@ export class CampusWorld {
 
     const plazaTexture = this.makeSurfaceTexture('plaza-texture', 512, (context, size) => {
       const random = this.rng(43)
-      context.fillStyle = '#c2bdb4'
+      context.fillStyle = '#d9d4c8'
       context.fillRect(0, 0, size, size)
       const tile = 64
       for (let y = 0; y < size; y += tile) {
         for (let x = 0; x < size; x += tile) {
-          const shade = 170 + Math.floor(random() * 30)
+          const shade = 208 + Math.floor(random() * 22)
           context.fillStyle = `rgb(${shade}, ${shade - 3}, ${shade - 8})`
           context.fillRect(x + 2, y + 2, tile - 4, tile - 4)
         }
@@ -349,12 +362,35 @@ export class CampusWorld {
     this.plazaMaterial.diffuseTexture = plazaTexture
     this.plazaMaterial.diffuseColor = new Color3(1, 1, 1)
 
+    // Flat, unlit surfaces: the TinyTroupe-style look keeps authored pastel
+    // colours exactly as designed instead of dimming them with point lights.
+    const flatten = (material: StandardMaterial): void => {
+      material.disableLighting = true
+      if (material.diffuseTexture) {
+        material.emissiveTexture = material.diffuseTexture
+        material.emissiveColor = new Color3(0, 0, 0)
+      } else {
+        material.emissiveColor = material.diffuseColor.clone()
+      }
+    }
+    for (const material of [
+      this.wallMaterial,
+      this.floorMaterial,
+      this.groundMaterial,
+      this.plazaMaterial,
+      this.woodMaterial,
+      this.stoneMaterial,
+      this.roofMaterial,
+    ]) {
+      flatten(material)
+    }
+
     const glass = new StandardMaterial('glass', this.scene)
-    glass.diffuseColor = new Color3(0.2, 0.32, 0.4)
-    glass.emissiveColor = new Color3(0.55, 0.72, 0.92)
+    glass.diffuseColor = new Color3(0.6, 0.85, 0.92)
+    glass.emissiveColor = new Color3(0.78, 0.94, 1)
     glass.disableLighting = true
     glass.specularColor = new Color3(0.6, 0.7, 0.8)
-    glass.alpha = 0.4
+    glass.alpha = 0.62
     glass.transparencyMode = Material.MATERIAL_ALPHABLEND
     glass.maxSimultaneousLights = 8
     this.glassMaterial = glass
@@ -394,7 +430,9 @@ export class CampusWorld {
       const pz = 20 + Math.sin(angle) * 11
       const pot = MeshBuilder.CreateCylinder(`planter-${i}`, { height: 0.7, diameterTop: 1.1, diameterBottom: 0.85 }, this.scene)
       pot.position = new Vector3(px, 0.35, pz)
-      pot.material = this.stoneMaterial
+      const potMaterial = new StandardMaterial(`planter-pot-${i}`, this.scene)
+      potMaterial.diffuseColor = [new Color3(0.94, 0.5, 0.4), new Color3(0.3, 0.68, 0.65), new Color3(0.95, 0.75, 0.35)][i % 3]!
+      pot.material = potMaterial
       pot.parent = this.root
       const bush = MeshBuilder.CreateSphere(`planter-bush-${i}`, { diameter: 1.4, segments: 8 }, this.scene)
       bush.position = new Vector3(px, 1.15, pz)
@@ -461,6 +499,17 @@ export class CampusWorld {
       if (floor < floors - 1) this.staircase(building, floor)
     }
 
+    const signBacking = box(
+      this.scene,
+      `${building.id}-sign-backing`,
+      7.9,
+      1.95,
+      0.12,
+      localToWorld(origin, building.entrance.x, 3.55, halfD + 0.04),
+      this.accentMaterial(building.id),
+      false,
+    )
+    signBacking.parent = this.root
     const sign = this.makeSign(building)
     sign.position = localToWorld(origin, building.entrance.x, 3.55, halfD + 0.14)
     sign.parent = this.root
@@ -495,6 +544,14 @@ export class CampusWorld {
         false,
       ).parent = this.root
     }
+  }
+
+  private accentMaterial(buildingId: string): StandardMaterial {
+    const material = new StandardMaterial(`sign-accent-${buildingId}`, this.scene)
+    material.diffuseColor = accentFor(buildingId)
+    material.emissiveColor = accentFor(buildingId).scale(0.2)
+    material.specularColor = new Color3(0.05, 0.05, 0.05)
+    return material
   }
 
   private makeSign(building: BuildingDef): Mesh {
@@ -628,8 +685,9 @@ export class CampusWorld {
       const rightWidth = room.max.x - (centreX + doorWidth / 2)
 
       const wallTint = new StandardMaterial(`wall-tint-${room.id}`, this.scene)
-      wallTint.diffuseColor = Color3.Lerp(new Color3(0.82, 0.82, 0.79), ROOM_ACCENTS[room.kind], 0.16)
-      wallTint.ambientColor = wallTint.diffuseColor.scale(0.5)
+      wallTint.diffuseColor = Color3.Lerp(new Color3(0.97, 0.96, 0.93), ROOM_ACCENTS[room.kind], 0.2)
+      wallTint.emissiveColor = wallTint.diffuseColor.clone()
+      wallTint.disableLighting = true
       wallTint.specularColor = new Color3(0.04, 0.04, 0.04)
       const add = (suffix: string, w: number, x: number): void => {
         if (w <= 0.05) return
@@ -778,6 +836,7 @@ export class CampusWorld {
     context.textAlign = 'center'
     context.textBaseline = 'middle'
     context.fillText(room.name, 128, 33)
+    texture.gammaSpace = false
     texture.update()
 
     const signMaterial = new StandardMaterial(`room-sign-material-${room.id}`, this.scene)
@@ -886,8 +945,12 @@ export class CampusWorld {
     const halfW = width / 2
     const halfD = depth / 2
     const dark = new StandardMaterial(`mullion-${building.id}`, this.scene)
-    dark.diffuseColor = new Color3(0.16, 0.17, 0.2)
+    dark.diffuseColor = new Color3(0.5, 0.6, 0.7)
     dark.specularColor = new Color3(0.05, 0.05, 0.05)
+    const accent = new StandardMaterial(`accent-band-${building.id}`, this.scene)
+    accent.diffuseColor = accentFor(building.id)
+    accent.emissiveColor = accentFor(building.id).scale(0.18)
+    accent.specularColor = new Color3(0.04, 0.04, 0.04)
 
     const mullions: Mesh[] = []
     for (let floor = 0; floor < floors; floor++) {
@@ -911,7 +974,7 @@ export class CampusWorld {
 
     const bands = MeshBuilder.CreateBox(`${building.id}-floor-band`, { width: width + 0.5, height: 0.22, depth: 0.16 }, this.scene)
     bands.position = localToWorld(origin, 0, floorHeight, halfD + 0.18)
-    bands.material = dark
+    bands.material = accent
     bands.isPickable = false
     bands.parent = this.root
     const bandsSouth = bands.clone(`${building.id}-floor-band-s`)
@@ -1086,9 +1149,10 @@ export class CampusWorld {
     trunkTemplate.isVisible = false
     trunkTemplate.parent = this.root
 
-    const foliageTemplate = MeshBuilder.CreateSphere('tree-foliage', { diameter: 2.6, segments: 8 }, this.scene)
+    const foliageTemplate = MeshBuilder.CreateSphere('tree-foliage', { diameter: 2.6, segments: 12 }, this.scene)
     const foliageMaterial = new StandardMaterial('foliage', this.scene)
-    foliageMaterial.diffuseColor = new Color3(0.16, 0.32, 0.2)
+    foliageMaterial.diffuseColor = new Color3(0.3, 0.72, 0.38)
+    foliageMaterial.emissiveColor = new Color3(0.05, 0.18, 0.07)
     foliageMaterial.specularColor = new Color3(0.02, 0.02, 0.02)
     foliageTemplate.material = foliageMaterial
     foliageTemplate.isVisible = false
@@ -1101,6 +1165,10 @@ export class CampusWorld {
       const foliage = foliageTemplate.createInstance(`tree-foliage-${x}-${z}`)
       foliage.position = new Vector3(x, 3.2, z)
       foliage.parent = this.root
+      const crown = foliageTemplate.createInstance(`tree-crown-${x}-${z}`)
+      crown.position = new Vector3(x + 0.5, 4.1, z - 0.2)
+      crown.scaling = new Vector3(0.6, 0.6, 0.6)
+      crown.parent = this.root
     }
   }
 

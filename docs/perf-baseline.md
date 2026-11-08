@@ -21,17 +21,17 @@ samples per waypoint, medians), Chromium headless with SwiftShader.
 
 | Waypoint | FPS | Draw calls | Naive draw calls | Culling drop |
 |---|---|---|---|---|
-| Plaza | 4.0 | 650 | 1487 | 56.3% |
-| Lobby | 4.3 | 326 | 1480 | 78.0% |
-| Office | 4.4 | 265 | 1456 | 81.8% |
-| Stairs | 4.9 | 234 | — | — |
-| Floor 1 | 4.9 | 345 | — | — |
-| Forge | 4.1 | 429 | — | — |
-| Observatory | 4.2 | 311 | — | — |
-| Library | 4.6 | 116 | — | — |
-| Studio | 5.0 | 113 | — | — |
+| Plaza | 5.0 | 688 | 1558 | 55.8% |
+| Lobby | 6.6 | 341 | 1563 | 78.2% |
+| Office | 8.1 | 278 | 1530 | 81.8% |
+| Stairs | 8.2 | 247 | — | — |
+| Floor 1 | 8.6 | 331 | — | — |
+| Forge | 7.4 | 455 | — | — |
+| Observatory | 8.3 | 332 | — | — |
+| Library | 9.2 | 136 | — | — |
+| Studio | 8.3 | 143 | — | — |
 
-Scene: 1758 meshes, ~650 building meshes, ~900 cullable room/prop meshes.
+Scene: 1946 meshes, ~650 building meshes, ~1000 cullable room/prop/avatar meshes.
 
 Budgets
 

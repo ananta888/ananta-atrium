@@ -14,6 +14,8 @@ interface AvatarView {
   body: Mesh
   head: Mesh
   hair: Mesh
+  eyes: Mesh[]
+  mouth: Mesh
   ring: Mesh
   beacon: Mesh
   shadow: Mesh
@@ -28,6 +30,7 @@ interface AvatarView {
   pantsMaterial: StandardMaterial
   skinMaterial: StandardMaterial
   hairMaterial: StandardMaterial
+  eyeMaterial: StandardMaterial
   lastPosition: Vector3
   initialized: boolean
 }
@@ -63,9 +66,26 @@ const HAIR_COLORS = [
   new Color3(0.65, 0.62, 0.58),
 ]
 
+const SHIRT_COLORS = [
+  new Color3(0.95, 0.46, 0.4),
+  new Color3(0.25, 0.67, 0.63),
+  new Color3(0.36, 0.6, 0.93),
+  new Color3(0.96, 0.75, 0.35),
+  new Color3(0.97, 0.6, 0.42),
+  new Color3(0.6, 0.49, 0.83),
+  new Color3(0.55, 0.8, 0.55),
+  new Color3(0.9, 0.55, 0.68),
+]
+
+const PANTS_COLORS = [
+  new Color3(0.25, 0.33, 0.46),
+  new Color3(0.18, 0.22, 0.3),
+  new Color3(0.45, 0.4, 0.34),
+  new Color3(0.3, 0.42, 0.36),
+]
+
 function colorForAgent(id: string): Color3 {
-  const hue = (hashString(id) % 360) / 360
-  return Color3.FromHSV(hue, 0.42, 0.78)
+  return pickByHash(SHIRT_COLORS, hashString(id))
 }
 
 function pickByHash<T>(items: readonly T[], seed: number): T {
@@ -116,7 +136,7 @@ export class AvatarLayer {
     const shirtColor = colorForAgent(agent.id)
     const skinColor = pickByHash(SKIN_TONES, seed >>> 3)
     const hairColor = pickByHash(HAIR_COLORS, seed >>> 7)
-    const pantsColor = new Color3(0.16, 0.18, 0.24).add(new Color3(0.03, 0.03, 0.05).scale(((seed >>> 0) % 10) / 10))
+    const pantsColor = pickByHash(PANTS_COLORS, seed >>> 5)
 
     const material = (name: string, color: Color3, specular = 0.05): StandardMaterial => {
       const created = new StandardMaterial(`avatar-${name}-${agent.id}`, this.scene)
@@ -131,55 +151,69 @@ export class AvatarLayer {
 
     const body = MeshBuilder.CreateCapsule(
       `avatar-body-${agent.id}`,
-      { height: 0.86, radius: 0.26, tessellation: 10 },
+      { height: 0.58, radius: 0.28, tessellation: 12 },
       this.scene,
     )
     body.material = bodyMaterial
     body.parent = root
-    body.position.y = 1.18
+    body.position.y = 0.83
 
-    const head = MeshBuilder.CreateSphere(`avatar-head-${agent.id}`, { diameter: 0.38, segments: 10 }, this.scene)
+    const head = MeshBuilder.CreateSphere(`avatar-head-${agent.id}`, { diameter: 0.52, segments: 14 }, this.scene)
     head.material = skinMaterial
     head.parent = root
-    head.position.y = 1.74
+    head.position.y = 1.36
 
-    const hair = MeshBuilder.CreateSphere(`avatar-hair-${agent.id}`, { diameter: 0.41, segments: 10 }, this.scene)
+    const hair = MeshBuilder.CreateSphere(`avatar-hair-${agent.id}`, { diameter: 0.55, segments: 14 }, this.scene)
     hair.material = hairMaterial
     hair.parent = root
-    hair.position.y = 1.8
-    hair.scaling = new Vector3(1, 0.55, 1)
+    hair.position.y = 1.45
+    hair.scaling = new Vector3(1, 0.52, 1)
+
+    const eyeMaterial = material('eyes', new Color3(0.12, 0.13, 0.16), 0.01)
+    const eyes: Mesh[] = []
+    for (const x of [-0.1, 0.1]) {
+      const eye = MeshBuilder.CreateSphere(`avatar-eye-${agent.id}`, { diameter: 0.075, segments: 8 }, this.scene)
+      eye.material = eyeMaterial
+      eye.position.set(x, 1.38, 0.245)
+      eye.parent = root
+      eyes.push(eye)
+    }
+    const mouth = MeshBuilder.CreateBox(`avatar-mouth-${agent.id}`, { width: 0.11, height: 0.025, depth: 0.02 }, this.scene)
+    mouth.material = eyeMaterial
+    mouth.position.set(0, 1.27, 0.252)
+    mouth.parent = root
 
     const legs: Mesh[] = []
-    for (const x of [-0.11, 0.11]) {
+    for (const x of [-0.12, 0.12]) {
       const leg = MeshBuilder.CreateCapsule(
         `avatar-leg-${agent.id}`,
-        { height: 0.8, radius: 0.1, tessellation: 6 },
+        { height: 0.44, radius: 0.1, tessellation: 8 },
         this.scene,
       )
       leg.material = pantsMaterial
-      leg.position.set(x, 0.46, 0)
+      leg.position.set(x, 0.28, 0)
       leg.parent = root
       legs.push(leg)
     }
 
     const feet: Mesh[] = []
-    for (const x of [-0.11, 0.11]) {
-      const foot = MeshBuilder.CreateBox(`avatar-foot-${agent.id}`, { width: 0.17, height: 0.08, depth: 0.3 }, this.scene)
+    for (const x of [-0.12, 0.12]) {
+      const foot = MeshBuilder.CreateBox(`avatar-foot-${agent.id}`, { width: 0.18, height: 0.09, depth: 0.28 }, this.scene)
       foot.material = pantsMaterial
-      foot.position.set(x, 0.04, 0.07)
+      foot.position.set(x, 0.04, 0.06)
       foot.parent = root
       feet.push(foot)
     }
 
     const arms: Mesh[] = []
-    for (const x of [-0.33, 0.33]) {
+    for (const x of [-0.3, 0.3]) {
       const arm = MeshBuilder.CreateCapsule(
         `avatar-arm-${agent.id}`,
-        { height: 0.62, radius: 0.08, tessellation: 6 },
+        { height: 0.52, radius: 0.08, tessellation: 8 },
         this.scene,
       )
       arm.material = bodyMaterial
-      arm.position.set(x, 1.15, 0)
+      arm.position.set(x, 0.85, 0)
       arm.parent = root
       arms.push(arm)
     }
@@ -207,9 +241,9 @@ export class AvatarLayer {
     const beaconMaterial = new StandardMaterial(`avatar-beacon-${agent.id}`, this.scene)
     beaconMaterial.emissiveColor = STATUS_COLORS[agent.status]
     beaconMaterial.disableLighting = true
-    const beacon = MeshBuilder.CreateSphere(`avatar-beacon-${agent.id}`, { diameter: 0.13, segments: 6 }, this.scene)
+    const beacon = MeshBuilder.CreateSphere(`avatar-beacon-${agent.id}`, { diameter: 0.12, segments: 8 }, this.scene)
     beacon.material = beaconMaterial
-    beacon.position.y = 2.2
+    beacon.position.y = 1.95
     beacon.isPickable = false
     beacon.parent = root
 
@@ -222,6 +256,8 @@ export class AvatarLayer {
       body,
       head,
       hair,
+      eyes,
+      mouth,
       ring,
       beacon,
       shadow,
@@ -236,6 +272,7 @@ export class AvatarLayer {
       pantsMaterial,
       skinMaterial,
       hairMaterial,
+      eyeMaterial,
       lastPosition: new Vector3(),
       initialized: false,
     }
@@ -279,8 +316,8 @@ export class AvatarLayer {
       const statusColor = (this.colorBlindSafe ? STATUS_COLORS_CB : STATUS_COLORS)[agent.status]
       view.beaconMaterial.emissiveColor = statusColor
       view.beacon.position.y = this.reducedMotion
-        ? 2.2
-        : 2.2 + Math.sin(performance.now() / 420 + hashString(agent.id)) * 0.03
+        ? 1.95
+        : 1.95 + Math.sin(performance.now() / 420 + hashString(agent.id)) * 0.03
 
       // Procedural gait: swing frequency follows real speed, so feet do not slide.
       const targetSwing = walking && !this.reducedMotion ? Math.min(1, speed / 1.6) : 0
@@ -301,7 +338,7 @@ export class AvatarLayer {
       view.body.scaling.y = this.reducedMotion ? 1 : 1 + Math.sin(view.phase * 2.2) * 0.012
 
       const offline = agent.status === 'offline'
-      const parts = [view.body, view.head, view.hair, view.shadow, ...view.legs, ...view.arms, ...view.feet]
+      const parts = [view.body, view.head, view.hair, view.mouth, ...view.eyes, view.shadow, ...view.legs, ...view.arms, ...view.feet]
       for (const part of parts) part.visibility = offline ? 0.35 : 1
       view.bodyMaterial.alpha = offline ? 0.35 : 1
       view.pantsMaterial.alpha = offline ? 0.35 : 1
@@ -312,6 +349,8 @@ export class AvatarLayer {
       view.root.setEnabled(distance < 90)
       view.head.setEnabled(distance < 40)
       view.hair.setEnabled(distance < 40)
+      view.mouth.setEnabled(distance < 40)
+      for (const eye of view.eyes) eye.setEnabled(distance < 40)
       view.beacon.setEnabled(distance < 55)
       view.ring.setEnabled(distance < 55)
       view.shadow.setEnabled(distance < 55)
@@ -325,6 +364,7 @@ export class AvatarLayer {
       view.pantsMaterial.dispose()
       view.skinMaterial.dispose()
       view.hairMaterial.dispose()
+      view.eyeMaterial.dispose()
       this.views.delete(id)
     }
   }

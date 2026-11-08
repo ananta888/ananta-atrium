@@ -29,9 +29,9 @@ Reference camera path, Chromium headless (SwiftShader), 50 agents:
 
 | Waypoint | Culled draw calls | Naive (no culling) | Drop |
 |---|---|---|---|
-| Plaza | 650 | 1487 | 56.3% |
-| Lobby | 326 | 1480 | 78.0% |
-| Office | 265 | 1456 | 81.8% |
+| Plaza | 688 | 1558 | 55.8% |
+| Lobby | 341 | 1563 | 78.2% |
+| Office | 278 | 1530 | 81.8% |
 
 Budgets: `perf/budget.json` (max 900 draw calls, ≥40% culling drop, 35% max
 regression). Results are produced by `npm run perf`.

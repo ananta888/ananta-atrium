@@ -122,7 +122,7 @@ export class Hud {
     this.overlay.width = 1
     this.overlay.height = 1
     this.overlay.thickness = 0
-    this.overlay.background = 'rgba(6, 9, 13, 0.55)'
+    this.overlay.background = 'rgba(6, 9, 13, 0.18)'
     this.adt.addControl(this.overlay)
     const overlayText = text(t('hud.enter'), { size: 22, bold: true })
     overlayText.name = 'enter-label'

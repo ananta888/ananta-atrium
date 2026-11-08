@@ -38,6 +38,23 @@ try {
   await page.waitForTimeout(1200)
   await page.screenshot({ path: join(outDir, 'floor-1.png') })
 
+  await page.evaluate(() => {
+    const session = window.__atrium
+    const agents = session.sim.snapshot('fake')
+    const agent = agents.find((item) => item.position)
+    if (!agent) return
+    agent.position = { x: 4, y: 0, z: 20 }
+    session.sim.applyLiveAgents([agent])
+    const view = session.avatars.views.get(agent.id)
+    if (view) view.root.rotation.y = 0
+    session.debugPause(true)
+    session.debugTeleport(4, 1.65, 23)
+    session.debugFace(Math.PI)
+  })
+  await page.waitForTimeout(1400)
+  await page.screenshot({ path: join(outDir, 'avatars.png') })
+  await page.evaluate(() => window.__atrium.debugPause(false))
+
   await page.evaluate(() => window.__atrium.debugTeleport(4, 1.8, 30))
   await page.keyboard.press('KeyL')
   await page.waitForTimeout(700)
