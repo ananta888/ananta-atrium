@@ -162,6 +162,7 @@ export class Simulation {
         ...(state.metrics?.tokensPerSecond !== undefined
           ? { tokensPerSecond: state.metrics.tokensPerSecond }
           : {}),
+        ...(state.trace !== undefined ? { trace: state.trace } : {}),
       }
       if (state.position) agent.position = clone(state.position)
       if (state.status === 'offline') {
@@ -463,6 +464,7 @@ export class Simulation {
           const trace = this.fakeTrace(agent.identity.id)
           if (trace) state.trace = trace
         }
+        if (live?.trace !== undefined) state.trace = live.trace
         if (live?.tokensPerSecond !== undefined) {
           state.metrics = { tokensPerSecond: live.tokensPerSecond }
         }

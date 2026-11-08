@@ -58,7 +58,7 @@ export class ChatBridge {
     this.token = options.token
     this.stateFile = options.stateFile
     this.fetcher = options.fetcher ?? fetch
-    this.replyTimeoutMs = options.replyTimeoutMs ?? 8000
+    this.replyTimeoutMs = options.replyTimeoutMs ?? 25_000
     this.replyPollMs = options.replyPollMs ?? 400
     this.state = this.loadState()
   }
@@ -103,7 +103,7 @@ export class ChatBridge {
       method: init.method ?? 'GET',
       headers: { 'Content-Type': 'application/json', ...init.headers },
       ...(init.body !== undefined ? { body: JSON.stringify(init.body) } : {}),
-      signal: AbortSignal.timeout(10_000),
+      signal: AbortSignal.timeout(20_000),
     })
     const text = await response.text()
     let parsed: unknown = null
@@ -211,10 +211,13 @@ export class ChatBridge {
         const message = asRecord(item)
         if (!message) continue
         const messageText = typeof message.text === 'string' ? message.text : ''
-        if (!messageText) continue
+        const sender = typeof message.from_id === 'string' ? message.from_id : ''
+        // The room feed also contains the user's own message; only agent
+        // replies count as an answer.
+        if (!messageText || !sender || sender === 'browser') continue
         messages.push({
           ...(typeof message.id === 'string' ? { id: message.id } : {}),
-          sender: typeof message.from_id === 'string' ? message.from_id : 'agent',
+          sender,
           text: messageText.slice(0, 2000),
           at: new Date((typeof message.created_at === 'number' ? message.created_at : Date.now() / 1000) * 1000).toISOString(),
         })

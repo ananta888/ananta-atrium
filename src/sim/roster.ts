@@ -1,4 +1,4 @@
-import type { AgentSource, AgentStatus } from '../shared/agent-state.js'
+import type { AgentSource, AgentStatus, AgentTrace } from '../shared/agent-state.js'
 
 export interface AgentIdentity {
   id: string
@@ -80,4 +80,5 @@ export interface LiveOverride {
   tokensPerSecond?: number
   source: AgentSource
   stale: boolean
+  trace?: AgentTrace
 }

@@ -25,6 +25,11 @@ export interface HubTask {
   status?: string
   progress?: number
   priority?: string
+  assigned_agent_url?: string | null
+  current_worker_job_id?: string | null
+  updated_at?: number
+  created_at?: number
+  task_kind?: string | null
 }
 
 export interface TaskDetailCacheEntry {
@@ -121,6 +126,59 @@ export function mapSessionToAgent(
   }
 }
 
+const ACTIVE_TASK_STATUSES = new Set([
+  'running',
+  'proposing',
+  'paused',
+  'blocked_by_dependency',
+  'waiting_for_review',
+  'updated',
+])
+
+const TASK_STATUS_MAP: Record<string, AgentStatus> = {
+  running: 'working',
+  updated: 'working',
+  proposing: 'waiting',
+  paused: 'waiting',
+  blocked_by_dependency: 'waiting',
+  waiting_for_review: 'reviewing',
+  todo: 'idle',
+  completed: 'idle',
+  failed: 'offline',
+  cancelled: 'offline',
+}
+
+export function mapTaskToAgent(task: HubTask, campus: CampusDef, nowMs: number): AgentState {
+  const status = TASK_STATUS_MAP[String(task.status ?? 'todo').toLowerCase()] ?? 'idle'
+  const seat = seatFor(task.id, campus.desks)
+  const worker = task.assigned_agent_url ?? ''
+  const workerLabel = worker.replace(/^https?:\/\//, '').split(':')[0] || `Task ${task.id.slice(0, 8)}`
+  const updated = Number(task.updated_at ?? 0)
+  return {
+    schemaVersion: AGENT_STATE_SCHEMA_VERSION,
+    id: `task:${task.id}`,
+    name: workerLabel.slice(0, 64),
+    role: (task.task_kind ?? 'Ananta task').slice(0, 64),
+    status,
+    buildingId: seat?.buildingId ?? campus.buildings[0]?.id ?? 'campus',
+    roomId: seat?.roomId ?? 'lobby',
+    deskId: seat?.id ?? 'unassigned',
+    task: {
+      title: (task.title ?? 'Ananta task').slice(0, 200),
+      progress: status === 'working' ? 0.5 : status === 'reviewing' ? 0.9 : status === 'idle' ? 0.1 : 0.3,
+      taskId: task.id,
+    },
+    activity: {
+      kind:
+        status === 'working' ? 'typing' : status === 'reviewing' ? 'reviewing' : status === 'waiting' ? 'thinking' : 'idle',
+      ...(status === 'working' ? { detail: 'Executing task' } : {}),
+    },
+    updatedAt: updated > 0 ? new Date(updated * 1000).toISOString() : new Date(nowMs).toISOString(),
+    source: 'live',
+    stale: updated > 0 ? nowMs - updated * 1000 > 15_000 : false,
+  }
+}
+
 function envelopeItems<T>(payload: unknown): T[] {
   if (Array.isArray(payload)) return payload as T[]
   if (typeof payload !== 'object' || payload === null) return []
@@ -169,7 +227,7 @@ export class AnantaHubSource {
     if (!this.token) throw new Error('ATRIUM_HUB_TOKEN is not configured')
     const response = await this.fetcher(`${this.baseUrl}${path}`, {
       headers: { Authorization: `Bearer ${this.token}`, Accept: 'application/json' },
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(10_000),
     })
     if (!response.ok) throw new Error(`${path} returned ${response.status}`)
     return response.json()
@@ -185,7 +243,7 @@ export class AnantaHubSource {
     if (!this.token) throw new Error('ATRIUM_HUB_TOKEN is not configured')
     const response = await this.fetcher(`${this.baseUrl}${path}`, {
       headers: { Authorization: `Bearer ${this.token}`, Accept: 'text/plain' },
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(10_000),
     })
     if (!response.ok) throw new Error(`${path} returned ${response.status}`)
     const text = await response.text()
@@ -291,7 +349,9 @@ export class AnantaHubSource {
       // Tasks are optional decoration: a missing endpoint must not hide agents.
       let tasks: HubTask[] = []
       try {
-        tasks = envelopeItems<HubTask>(await this.getJson('/api/tasks?limit=200'))
+        tasks = envelopeItems<HubTask>(
+          await this.getJson('/tasks?limit=200').catch(() => this.getJson('/api/tasks?limit=200')),
+        )
       } catch (error) {
         log('warn', 'hub tasks unavailable, using session titles', { error: (error as Error).message })
       }
@@ -300,10 +360,24 @@ export class AnantaHubSource {
       this.status.reachable = true
       this.status.lastError = null
       this.status.lastSuccessAt = now
-      const mapped = sessions.map((session) =>
-        mapSessionToAgent(session, session.task_id ? taskById.get(session.task_id) : undefined, this.campus, now),
-      )
-      return this.enrich(mapped)
+      if (sessions.length > 0) {
+        const mapped = sessions.map((session) =>
+          mapSessionToAgent(session, session.task_id ? taskById.get(session.task_id) : undefined, this.campus, now),
+        )
+        return this.enrich(mapped)
+      }
+
+      // Live stacks may run task workers without agent_sessions. Fall back to
+      // active/recent tasks so the atrium still reflects real work.
+      const active = tasks
+        .filter((task) => ACTIVE_TASK_STATUSES.has(String(task.status ?? '').toLowerCase()))
+        .sort((a, b) => Number(b.updated_at ?? 0) - Number(a.updated_at ?? 0))
+        .slice(0, 50)
+      const selected =
+        active.length > 0
+          ? active
+          : [...tasks].sort((a, b) => Number(b.updated_at ?? 0) - Number(a.updated_at ?? 0)).slice(0, 10)
+      return this.enrich(selected.map((task) => mapTaskToAgent(task, this.campus, now)))
     } catch (error) {
       this.status.reachable = false
       this.status.lastError = (error as Error).message

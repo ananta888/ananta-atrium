@@ -595,10 +595,10 @@
       "title": "M1 acceptance test with live Ananta",
       "type": "qa",
       "milestone": "M1",
-      "status": "blocked",
+      "status": "partial",
       "priority": "P0",
       "risk": "medium",
-      "progress_percent": 60,
+      "progress_percent": 80,
       "estimate": "1d",
       "depends_on": [
         "AT-105",
@@ -610,7 +610,7 @@
         "Killing the collector shows the fake fallback within 2 s; restarting resumes live data.",
         "Scenario is automated where possible and documented as a manual checklist where not."
       ],
-      "notes": "Automated fallback/adapter coverage and docs/manual-live-checklist.md exist; the live run needs ATRIUM_HUB_TOKEN and role scope."
+      "notes": "Live hub reachable with a minted local token; sessions table is empty, so the task fallback is required. 5 live tasks map to agents; fallback and trace verified, chat reply still pending in the loaded stack."
     },
     {
       "id": "AT-200",
@@ -1352,7 +1352,7 @@
         "Token/cost budget uses the hub cost/turn accounting when present; absent fields stay unknown.",
         "Per-field degradation is tested with fixtures; a task-detail failure does not hide the agent."
       ],
-      "notes": "Collector enriches sessions from /api/tasks/<id> (history, artifacts, verification) with per-field degradation and fixture tests; live mapping pending AT-609."
+      "notes": "Collector enriches sessions/tasks from /api/tasks/<id>; live hub has no agent_sessions, so an active/recent-task fallback was added and verified against 5 running tasks."
     },
     {
       "id": "AT-602",
@@ -1373,7 +1373,7 @@
         "Session tool-calls provide the live 'writing file X' signal before the diff artifact exists.",
         "Content is truncated and redacted locally; diff content never leaves the machine and failures are per-agent explicit."
       ],
-      "notes": "Newest workspace_diff artifact fetched via /api/artifacts/<id>/content, parsed into file stats and bounded preview; tool-calls add live file-change events; tests cover parsing."
+      "notes": "Diff artifact parsing and tool-call signals are implemented and tested; live tasks currently expose no workspace_diff artifact, which is shown as unknown."
     },
     {
       "id": "AT-603",
@@ -1469,7 +1469,7 @@
       "status": "partial",
       "priority": "P0",
       "risk": "critical",
-      "progress_percent": 40,
+      "progress_percent": 55,
       "estimate": "3d",
       "depends_on": [
         "AT-605",
@@ -1482,7 +1482,7 @@
         "If the reserved-slot approach misses the threshold, the ADR records the fallback to a dedicated small chat model.",
         "An ADR records fairness, starvation protection, rollback and the exact Ananta changes."
       ],
-      "notes": "Atrium shows the queue and chat is ready; Ananta still needs lease priority and a reserved interactive slot. Patch is documented in ADR 006; no local scheduler fake."
+      "notes": "Ananta branch feat/interactive-priority-lane adds priority leases + interactive reserve with tests; chat wiring and time-to-first-token measurement remain."
     },
     {
       "id": "AT-608",
@@ -1509,10 +1509,10 @@
       "title": "Live operations acceptance against a running hub",
       "type": "qa",
       "milestone": "M6",
-      "status": "blocked",
+      "status": "partial",
       "priority": "P0",
       "risk": "high",
-      "progress_percent": 25,
+      "progress_percent": 75,
       "estimate": "1d",
       "depends_on": [
         "AT-602",
@@ -1529,7 +1529,7 @@
         "Killing the collector falls back to the labelled fake source within 2 s; restart resumes.",
         "Evidence is recorded in the task notes with date, hub commit and measurements."
       ],
-      "notes": "Needs a valid hub JWT and the AT-607 Ananta change; all automated fixtures are in place."
+      "notes": "Live verified: 5 tasks/agents, SSE events, worker queue, budgets shown as unknown when absent; side chat accepted but the reply stayed pending under the loaded hub."
     },
     {
       "id": "AT-610",
@@ -1592,8 +1592,8 @@
     "by_status": {
       "todo": 0,
       "in_progress": 0,
-      "partial": 6,
-      "blocked": 2,
+      "partial": 8,
+      "blocked": 0,
       "done": 57
     },
     "progress_percent_done": 87.7,
@@ -1712,13 +1712,13 @@
       "qa": {
         "total": 8,
         "done": 4,
-        "partial": 2,
-        "blocked": 2,
+        "partial": 4,
+        "blocked": 0,
         "by_status": {
           "todo": 0,
           "in_progress": 0,
-          "partial": 2,
-          "blocked": 2,
+          "partial": 4,
+          "blocked": 0,
           "done": 4
         },
         "progress_percent": 50.0
@@ -1782,11 +1782,11 @@
     }
   },
   "progress_summary": {
-    "state": "blocked",
+    "state": "in_progress",
     "todo_remaining": 0,
     "in_progress": 0,
-    "partial": 6,
-    "blocked": 2,
+    "partial": 8,
+    "blocked": 0,
     "done": 57
   },
   "execution_stage_summary": {

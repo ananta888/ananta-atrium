@@ -61,7 +61,7 @@ export class WorkerPoolSource {
     if (!this.token) throw new Error('ATRIUM_HUB_TOKEN is not configured')
     const response = await this.fetcher(`${this.baseUrl}${path}`, {
       headers: { Authorization: `Bearer ${this.token}`, Accept: 'application/json' },
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(8000),
     })
     if (!response.ok) throw new Error(`${path} returned ${response.status}`)
     return response.json()

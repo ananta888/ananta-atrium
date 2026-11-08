@@ -47,6 +47,13 @@ Rules:
 
 ## Endpoints the collector uses
 
+### `GET /tasks` (task fallback)
+
+Live hubs may run task workers without `agent_sessions` rows. The collector then
+maps active/recent tasks (`running`, `proposing`, `paused`, `blocked_by_dependency`,
+`waiting_for_review`, `updated`) to agents. The list endpoint is `/tasks`, not
+`/api/tasks`.
+
 ### `GET /api/sessions`
 
 Primary source of agent identity. Response envelope:
@@ -133,6 +140,7 @@ is labelled as such in the UI.
 
 | Need | Endpoint |
 |---|---|
+| Task list (fallback source) | `GET /tasks?limit=200` (note: no `/api` prefix) |
 | Task detail/history/artifacts | `GET /api/tasks/<taskId>` |
 | Workspace diff | newest `workspace_diff` artifact via `GET /api/artifacts/<id>/content` |
 | Live file writes | `GET /api/sessions/<id>/tool-calls` |

@@ -72,7 +72,10 @@ if (config.source === 'fake') {
     lastSuccessfulPoll = Date.now()
   }, 1000 / 30)
 } else {
+  let polling = false
   const poll = async (): Promise<void> => {
+    if (polling) return
+    polling = true
     const now = Date.now()
     try {
       const fresh = await hub?.poll()
@@ -95,6 +98,8 @@ if (config.source === 'fake') {
     } catch (error) {
       log('warn', 'hub poll failed', { error: (error as Error).message })
       agents = agents.map((agent) => ({ ...agent, stale: true }))
+    } finally {
+      polling = false
     }
   }
   events?.start()
