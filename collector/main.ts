@@ -162,6 +162,7 @@ const server = startCollectorServer({
   getHealth: health,
   getOps: () => ops,
   ...(chat ? { chat } : {}),
+  ...(hub ? { renameAgent: (agentId: string, name: string) => hub.renameAgent(agentId, name) } : {}),
 })
 
 const shutdown = async (signal: string): Promise<void> => {

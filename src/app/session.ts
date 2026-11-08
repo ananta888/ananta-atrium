@@ -296,9 +296,28 @@ export class AtriumSession {
     return {}
   }
 
-  private renameAgent(id: string, name: string): void {
-    if (name) this.displayNames[id] = name.slice(0, 40)
+  private async renameAgent(id: string, name: string): Promise<void> {
+    const trimmed = name.trim().slice(0, 80)
+    try {
+      const response = await fetch(`${this.httpBase()}/rename`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agentId: id, name: trimmed }),
+      })
+      if (response.ok) {
+        delete this.displayNames[id]
+        this.persistDisplayNames()
+        return
+      }
+    } catch {
+      // Fall back to a local-only name when the collector is unavailable.
+    }
+    if (trimmed) this.displayNames[id] = trimmed.slice(0, 40)
     else delete this.displayNames[id]
+    this.persistDisplayNames()
+  }
+
+  private persistDisplayNames(): void {
     try {
       window.localStorage.setItem('ananta-atrium.agent-names.v1', JSON.stringify(this.displayNames))
     } catch {

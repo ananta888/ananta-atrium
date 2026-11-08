@@ -59,6 +59,11 @@ Role names come from `GET /teams` plus `GET /teams/roles`: `team_members` map
 (for example "Reviewer" or "Test Automation Engineer") instead of only the
 container name.
 
+Team members also carry a user-chosen `display_name` (Ananta migration
+`b3d5f7a9c1e2`). The collector reads it as the agent name and writes it back via
+`PATCH /teams/<teamId>/members/<memberId>` with `{"display_name": "…"}`. Agents
+without a team assignment (for example the hub worker) keep their registry name.
+
 ### `GET /tasks` (task fallback)
 
 Live hubs may run task workers without `agent_sessions` rows. The collector then

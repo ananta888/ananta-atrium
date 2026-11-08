@@ -27,6 +27,7 @@ export interface CollectorServerOptions {
   getHealth: () => HealthReport
   getOps?: () => OpsStatus | null
   chat?: ChatBridge
+  renameAgent?: (agentId: string, name: string) => Promise<boolean>
 }
 
 async function readJsonBody(request: IncomingMessage): Promise<Record<string, unknown>> {
@@ -160,6 +161,29 @@ export function startCollectorServer(options: CollectorServerOptions): RunningCo
             send(200, result)
           } catch (error) {
             send(502, { error: 'steer_failed', message: (error as Error).message })
+          }
+        })
+        .catch(() => send(400, { error: 'invalid_json' }))
+      return
+    }
+    if (url.pathname === '/rename' && request.method === 'POST') {
+      if (!options.renameAgent) {
+        send(503, { error: 'rename_unavailable' })
+        return
+      }
+      void readJsonBody(request)
+        .then(async (body) => {
+          const agentId = String(body.agentId ?? '')
+          const name = String(body.name ?? '').trim().slice(0, 80)
+          if (!agentId || !name) {
+            send(400, { error: 'agent_id_and_name_required' })
+            return
+          }
+          try {
+            const ok = await options.renameAgent!(agentId, name)
+            send(ok ? 200 : 404, ok ? { ok: true } : { error: 'agent_not_mapped' })
+          } catch (error) {
+            send(502, { error: 'rename_failed', message: (error as Error).message })
           }
         })
         .catch(() => send(400, { error: 'invalid_json' }))

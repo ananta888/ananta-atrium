@@ -41,6 +41,8 @@ export interface TeamMembership {
   teamId: string
   teamName: string
   roleName: string
+  memberId: string
+  displayName?: string
 }
 
 export interface HubWorker {
@@ -212,6 +214,7 @@ export function mapWorkerToAgent(
   const roleName = membership?.roleName ?? roles[0] ?? worker.role ?? 'worker'
   const assignment: AgentAssignment = {
     ...(workerUrl ? { workerUrl } : {}),
+    ...(membership ? { teamMemberId: membership.memberId } : {}),
     ...(worker.runtime ? { runtime: worker.runtime } : {}),
     ...(worker.health ? { health: worker.health } : {}),
     ...(plannedTask ? { planned: plannedFromTask(plannedTask)! } : {}),
@@ -227,7 +230,7 @@ export function mapWorkerToAgent(
   return {
     schemaVersion: AGENT_STATE_SCHEMA_VERSION,
     id: `worker:${worker.id}`,
-    name: worker.id.slice(0, 64),
+    name: (membership?.displayName || worker.id).slice(0, 64),
     role: roleName.slice(0, 64),
     status,
     buildingId: seat?.buildingId ?? campus.buildings[0]?.id ?? 'campus',
@@ -302,6 +305,7 @@ export class AnantaHubSource {
   private readonly detailCache = new Map<string, TaskDetailCacheEntry>()
   private readonly diffCache = new Map<string, { at: number; text: string }>()
   private readonly toolCallCache = new Map<string, { at: number; value: unknown }>()
+  private readonly memberByAgent = new Map<string, TeamMembership>()
 
   constructor(options: {
     baseUrl: string
@@ -438,6 +442,32 @@ export class AnantaHubSource {
     return enriched
   }
 
+  private async requestJson(method: string, path: string, body: unknown): Promise<unknown> {
+    if (!this.token) throw new Error('ATRIUM_HUB_TOKEN is not configured')
+    const response = await this.fetcher(`${this.baseUrl}${path}`, {
+      method,
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(10_000),
+    })
+    if (!response.ok) throw new Error(`${path} returned ${response.status}`)
+    return response.json()
+  }
+
+  async renameAgent(agentId: string, name: string): Promise<boolean> {
+    const membership = this.memberByAgent.get(agentId)
+    if (!membership?.memberId) return false
+    await this.requestJson('PATCH', `/teams/${encodeURIComponent(membership.teamId)}/members/${encodeURIComponent(membership.memberId)}`, {
+      display_name: name.slice(0, 80),
+    })
+    membership.displayName = name.slice(0, 80)
+    return true
+  }
+
   async poll(): Promise<AgentState[]> {
     const now = Date.now()
     try {
@@ -480,6 +510,7 @@ export class AnantaHubSource {
             roleNames.set(record.id, record.name)
           }
         }
+        this.memberByAgent.clear()
         for (const team of teamRows) {
           const record = typeof team === 'object' && team !== null ? (team as Record<string, unknown>) : null
           if (!record || !Array.isArray(record.members)) continue
@@ -488,11 +519,16 @@ export class AnantaHubSource {
           for (const member of record.members as unknown[]) {
             const item = typeof member === 'object' && member !== null ? (member as Record<string, unknown>) : null
             if (!item || typeof item.agent_url !== 'string' || typeof item.role_id !== 'string') continue
-            memberships.set(item.agent_url, {
+            const membership: TeamMembership = {
               teamId,
               teamName,
               roleName: roleNames.get(item.role_id) ?? 'team member',
-            })
+              memberId: typeof item.id === 'string' ? item.id : '',
+              ...(typeof item.display_name === 'string' && item.display_name
+                ? { displayName: item.display_name }
+                : {}),
+            }
+            memberships.set(item.agent_url, membership)
           }
         }
       } catch (error) {
@@ -526,7 +562,9 @@ export class AnantaHubSource {
             .sort((a, b) => Number(b.updated_at ?? 0) - Number(a.updated_at ?? 0))
           const current = assigned[0]
           const planned = unassignedQueue[index]
-          return mapWorkerToAgent(worker, current, planned, this.campus, now, worker.url ? memberships.get(worker.url) : undefined)
+          const membership = worker.url ? memberships.get(worker.url) : undefined
+          if (membership) this.memberByAgent.set(`worker:${worker.id}`, membership)
+          return mapWorkerToAgent(worker, current, planned, this.campus, now, membership)
         })
         return this.enrich(mapped)
       }

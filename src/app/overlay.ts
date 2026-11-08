@@ -226,10 +226,13 @@ export class Overlay {
     this.nameInput.type = 'text'
     this.nameInput.maxLength = 40
     this.nameInput.setAttribute('aria-label', t('detail.displayName'))
-    this.nameInput.addEventListener('input', () => {
+    this.nameInput.addEventListener('change', () => {
       if (this.selectedAgent) {
         this.callbacks.onRenameAgent(this.selectedAgent, this.nameInput.value.trim())
       }
+    })
+    this.nameInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') this.nameInput.blur()
     })
     nameField.append(this.nameInput)
     nameField.append(element('div', 'ui-note', t('detail.renameHint')))

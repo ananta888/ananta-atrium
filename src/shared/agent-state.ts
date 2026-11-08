@@ -92,6 +92,7 @@ export interface PlannedTask {
 
 export interface AgentAssignment {
   workerUrl?: string
+  teamMemberId?: string
   runtime?: string
   health?: string
   planned?: PlannedTask
