@@ -24,7 +24,9 @@
     "perf:update": "node devtools/perf-check.mjs --update",
     "check:i18n": "tsx devtools/check-i18n.ts",
     "release:check": "node devtools/release-check.mjs",
-    "screenshots": "node devtools/screenshots.mjs"
+    "screenshots": "node devtools/screenshots.mjs",
+    "proxy:dev": "tsx proxy/main.ts",
+    "proxy:start": "tsx proxy/main.ts"
   },
   "dependencies": {
     "@babylonjs/core": "^9.35.0",

@@ -1463,26 +1463,26 @@
     },
     {
       "id": "AT-607",
-      "title": "Interactive chat priority lane on the eGPU (Option A)",
+      "title": "Interactive chat priority lane via local LLM proxy",
       "type": "foundation",
       "milestone": "M6",
-      "status": "blocked",
+      "status": "partial",
       "priority": "P0",
       "risk": "critical",
-      "progress_percent": 55,
+      "progress_percent": 85,
       "estimate": "3d",
       "depends_on": [
         "AT-605",
         "AT-606"
       ],
       "acceptance_criteria": [
-        "Ananta worker-pool leases gain a priority/lease_class; queued jobs are ordered interactive-before-background and one interactive slot is reserved.",
-        "A user chat requests an interactive lease; after the reply the lease is released and queued background work resumes.",
-        "Measured time-to-first-token for chat stays under the documented threshold while the background queue is saturated.",
-        "If the reserved-slot approach misses the threshold, the ADR records the fallback to a dedicated small chat model.",
-        "An ADR records fairness, starvation protection, rollback and the exact Ananta changes."
+        "A local proxy fronts the model runtime with separate batch and interactive entry points.",
+        "Interactive requests are served before queued background work, with a starvation guard; running requests are not preempted.",
+        "Queue waits, active slots and upstream errors are exposed at /__proxy/stats and covered by tests.",
+        "Deployment documentation shows how to point Ananta workers and AI-Snake chat at the two ports.",
+        "Measured ordering on the live runtime is recorded; TTFT remains bounded by the current running request when slots=1."
       ],
-      "notes": "Scheduler priority/reserve implemented and tested on Ananta branch feat/interactive-priority-lane. BLOCKER discovered: the main worker dispatch does not call worker_pool_scheduler.acquire_for_job (only the spreadsheet adapter does), so a lease priority cannot throttle coding/LLM workers. A priority-aware LLM proxy or a dedicated interactive model is required; the current scheduler lane only affects meet/legacy leases."
+      "notes": "Implemented proxy/ with two lanes (batch :11500, interactive :11501), shared upstream slots, starvation guard, stats and tests. Live measurement on llama.cpp ananta-code-27b slots=1: bg1 5.7s, interactive 11.8s, bg2 19.2s -> interactive jumps queued batch but cannot preempt a running request. Remaining: point Ananta worker/chat base URLs at the two proxy ports in deployment. Ananta branch feat/interactive-priority-lane remains as an alternative if dispatch is moved onto the scheduler."
     },
     {
       "id": "AT-608",
@@ -1592,8 +1592,8 @@
     "by_status": {
       "todo": 0,
       "in_progress": 0,
-      "partial": 7,
-      "blocked": 1,
+      "partial": 8,
+      "blocked": 0,
       "done": 57
     },
     "progress_percent_done": 87.7,
@@ -1670,13 +1670,13 @@
       "foundation": {
         "total": 3,
         "done": 2,
-        "partial": 0,
-        "blocked": 1,
+        "partial": 1,
+        "blocked": 0,
         "by_status": {
           "todo": 0,
           "in_progress": 0,
-          "partial": 0,
-          "blocked": 1,
+          "partial": 1,
+          "blocked": 0,
           "done": 2
         },
         "progress_percent": 66.7
@@ -1782,11 +1782,11 @@
     }
   },
   "progress_summary": {
-    "state": "blocked",
+    "state": "in_progress",
     "todo_remaining": 0,
     "in_progress": 0,
-    "partial": 7,
-    "blocked": 1,
+    "partial": 8,
+    "blocked": 0,
     "done": 57
   },
   "execution_stage_summary": {

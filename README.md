@@ -84,6 +84,7 @@ credentials; the checklist is in
 | `npm run build` | boundary check + typecheck + static build |
 | `npm test` / `npm run e2e` | Vitest / Playwright |
 | `npm run collector:dev` | collector (fake by default) |
+| `npm run proxy:dev` | priority-aware Ollama/llama.cpp proxy |
 | `npm run perf` / `npm run perf:update` | regression check / new baseline |
 | `npm run check:assets` | manifest, licences and hashes |
 | `npm run check:i18n` | locale parity and no literal UI strings |
@@ -95,6 +96,7 @@ credentials; the checklist is in
 - [`AGENTS.md`](AGENTS.md) — architecture rules and the todo contract.
 - [`docs/architecture.md`](docs/architecture.md) — layers, determinism, ECS.
 - [`docs/integration-ananta.md`](docs/integration-ananta.md) — hub endpoints/auth.
+- [`docs/llm-proxy.md`](docs/llm-proxy.md) — interactive-first eGPU queue.
 - [`docs/perf-baseline.md`](docs/perf-baseline.md) — measured budgets.
 - [`docs/campus.md`](docs/campus.md) · [`docs/lod.md`](docs/lod.md) ·
   [`docs/accessibility-checklist.md`](docs/accessibility-checklist.md).
