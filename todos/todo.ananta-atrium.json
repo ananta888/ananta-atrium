@@ -1466,7 +1466,7 @@
       "title": "Interactive chat priority lane on the eGPU (Option A)",
       "type": "foundation",
       "milestone": "M6",
-      "status": "partial",
+      "status": "blocked",
       "priority": "P0",
       "risk": "critical",
       "progress_percent": 55,
@@ -1482,7 +1482,7 @@
         "If the reserved-slot approach misses the threshold, the ADR records the fallback to a dedicated small chat model.",
         "An ADR records fairness, starvation protection, rollback and the exact Ananta changes."
       ],
-      "notes": "Ananta branch feat/interactive-priority-lane adds priority leases + interactive reserve with tests; chat wiring and time-to-first-token measurement remain."
+      "notes": "Scheduler priority/reserve implemented and tested on Ananta branch feat/interactive-priority-lane. BLOCKER discovered: the main worker dispatch does not call worker_pool_scheduler.acquire_for_job (only the spreadsheet adapter does), so a lease priority cannot throttle coding/LLM workers. A priority-aware LLM proxy or a dedicated interactive model is required; the current scheduler lane only affects meet/legacy leases."
     },
     {
       "id": "AT-608",
@@ -1592,8 +1592,8 @@
     "by_status": {
       "todo": 0,
       "in_progress": 0,
-      "partial": 8,
-      "blocked": 0,
+      "partial": 7,
+      "blocked": 1,
       "done": 57
     },
     "progress_percent_done": 87.7,
@@ -1670,13 +1670,13 @@
       "foundation": {
         "total": 3,
         "done": 2,
-        "partial": 1,
-        "blocked": 0,
+        "partial": 0,
+        "blocked": 1,
         "by_status": {
           "todo": 0,
           "in_progress": 0,
-          "partial": 1,
-          "blocked": 0,
+          "partial": 0,
+          "blocked": 1,
           "done": 2
         },
         "progress_percent": 66.7
@@ -1782,11 +1782,11 @@
     }
   },
   "progress_summary": {
-    "state": "in_progress",
+    "state": "blocked",
     "todo_remaining": 0,
     "in_progress": 0,
-    "partial": 8,
-    "blocked": 0,
+    "partial": 7,
+    "blocked": 1,
     "done": 57
   },
   "execution_stage_summary": {

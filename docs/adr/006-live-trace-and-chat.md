@@ -32,6 +32,16 @@ Status: accepted, live acceptance pending.
 
 ## eGPU priority
 
-Atrium only displays the worker pool and will request an interactive lane. The
-actual priority must be implemented in Ananta (lease priority + one reserved
-interactive slot, fallback dedicated chat model). Atrium does not fake scheduling.
+**Finding (2026-11-08):** the worker-pool scheduler is not on the main worker
+dispatch path — only the spreadsheet adapter calls `acquire_for_job`. The active
+leases in the running stack come from meet/legacy paths. A lease priority in the
+scheduler therefore cannot throttle coding/LLM workers.
+
+The viable options are:
+1. a priority-aware proxy in front of the local Ollama/llama.cpp endpoint
+   (interactive requests jump the queue, background requests are queued), or
+2. a dedicated interactive chat model kept resident on the eGPU, or
+3. wiring the main worker dispatch through the scheduler first, then using the
+   priority leases from branch `feat/interactive-priority-lane`.
+
+Atrium only displays the queue and never fakes scheduling.
