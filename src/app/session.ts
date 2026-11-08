@@ -58,6 +58,7 @@ export class AtriumSession {
   private replayTime = 0
   private lastRecordAt = 0
   private focusedAgent: string | null = null
+  private displayNames: Record<string, string> = {}
   private readonly spectator = new URLSearchParams(window.location.search).get('spectator') === '1'
   private orbitAngle = 0
 
@@ -84,6 +85,7 @@ export class AtriumSession {
     this.clock = new FixedStepDriver({ tickSeconds: 1 / 30, maxStepsPerFrame: 6 })
     this.instrumentation = new SceneInstrumentation(this.render.scene)
     this.settings = loadSettings(window.localStorage)
+    this.displayNames = this.loadDisplayNames()
     await this.applyAssets()
 
     this.sim = new Simulation({ campus, roster: buildRoster(FAKE_AGENT_COUNT) })
@@ -142,6 +144,7 @@ export class AtriumSession {
         if (id) this.overlay.showAgentList()
       },
       onChat: (request) => this.sendChat(request),
+      onRenameAgent: (id, name) => this.renameAgent(id, name),
     })
     this.controller.setEnabled(!this.spectator)
     if (this.spectator) this.overlay.hideMenu()
@@ -279,6 +282,37 @@ export class AtriumSession {
     }
   }
 
+  private loadDisplayNames(): Record<string, string> {
+    try {
+      const parsed = JSON.parse(window.localStorage.getItem('ananta-atrium.agent-names.v1') ?? '{}') as unknown
+      if (typeof parsed === 'object' && parsed !== null) {
+        return Object.fromEntries(
+          Object.entries(parsed as Record<string, unknown>).filter((entry): entry is [string, string] => typeof entry[1] === 'string'),
+        )
+      }
+    } catch {
+      // Ignore invalid local names.
+    }
+    return {}
+  }
+
+  private renameAgent(id: string, name: string): void {
+    if (name) this.displayNames[id] = name.slice(0, 40)
+    else delete this.displayNames[id]
+    try {
+      window.localStorage.setItem('ananta-atrium.agent-names.v1', JSON.stringify(this.displayNames))
+    } catch {
+      // Local storage may be unavailable; the name still applies this session.
+    }
+  }
+
+  private withDisplayNames(agents: AgentState[]): AgentState[] {
+    return agents.map((agent) => {
+      const name = this.displayNames[agent.id]
+      return name ? { ...agent, name } : agent
+    })
+  }
+
   private httpBase(): string {
     try {
       const url = new URL(this.settings.collectorUrl)
@@ -387,7 +421,7 @@ export class AtriumSession {
 
     const simulated = this.sim.snapshot(this.source)
     const agents = this.replayActive ? this.replay.seek(this.replayTime) : simulated
-    const shown = agents.length > 0 ? agents : simulated
+    const shown = this.withDisplayNames(agents.length > 0 ? agents : simulated)
     this.avatars.sync(shown, deltaSeconds, this.controller.camera.position)
 
     if (this.replayRecording && now - this.lastRecordAt >= RECORD_INTERVAL_MS) {

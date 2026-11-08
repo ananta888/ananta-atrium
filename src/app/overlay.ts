@@ -35,6 +35,7 @@ export interface OverlayCallbacks {
   onReplaySeek: (t: number) => void
   onFocusAgent: (id: string | null) => void
   onChat: (request: ChatRequest) => Promise<ChatResult>
+  onRenameAgent: (id: string, name: string) => void
 }
 
 export interface PlayerPose {
@@ -130,6 +131,7 @@ export class Overlay {
   private readonly detailBody: HTMLDivElement
   private readonly detailBudgets: HTMLDivElement
   private readonly detailAttempts: HTMLDivElement
+  private readonly nameInput: HTMLInputElement
   private readonly detailDiff: HTMLPreElement
   private readonly detailEvents: HTMLUListElement
   private readonly chatMode: HTMLSelectElement
@@ -218,6 +220,19 @@ export class Overlay {
     this.detailBody = element('div', 'ui-note')
     this.detailBudgets = element('div', 'ui-budgets')
     this.detailAttempts = element('div', 'ui-note')
+    const nameField = element('div', 'ui-field')
+    nameField.append(element('label', undefined, t('detail.displayName')))
+    this.nameInput = element('input')
+    this.nameInput.type = 'text'
+    this.nameInput.maxLength = 40
+    this.nameInput.setAttribute('aria-label', t('detail.displayName'))
+    this.nameInput.addEventListener('input', () => {
+      if (this.selectedAgent) {
+        this.callbacks.onRenameAgent(this.selectedAgent, this.nameInput.value.trim())
+      }
+    })
+    nameField.append(this.nameInput)
+    nameField.append(element('div', 'ui-note', t('detail.renameHint')))
     this.detailDiff = element('pre', 'ui-pre')
     this.detailEvents = element('ul', 'ui-events')
     const chatBox = element('div', 'ui-chat')
@@ -251,6 +266,7 @@ export class Overlay {
     chatControls.append(this.chatMode, this.chatSteerMode, this.chatClass, this.chatSend)
     chatBox.append(chatControls, this.chatText, this.chatStatus, this.chatReplies)
     this.detailRoot.append(
+      nameField,
       this.detailTitle,
       this.detailBody,
       this.detailBudgets,
@@ -736,7 +752,7 @@ export class Overlay {
       (agent) => (status === 'all' || agent.status === status) && (room === 'all' || agent.roomId === room),
     )
     const signature = `${this.selectedAgent}|${status}|${room}|${this.settings.colorBlindSafe}|` +
-      filtered.map((a) => `${a.id}:${a.status}:${a.roomId}:${a.task.title}`).join('|')
+      filtered.map((a) => `${a.id}:${a.name}:${a.status}:${a.roomId}:${a.task.title}`).join('|')
     if (signature === this.agentListSignature) return
     this.agentListSignature = signature
     this.agentCount.textContent = t('agentList.count', { count: filtered.length })
@@ -814,6 +830,7 @@ export class Overlay {
     this.detailRoot.hidden = !agent
     if (!agent) return
     this.detailTitle.textContent = `${agent.name} · ${statusLabel(agent.status)}`
+    if (this.nameInput.value !== agent.name) this.nameInput.value = agent.name
     this.detailBody.textContent = [
       agent.role,
       t('detail.task') + ': ' + agent.task.title,
