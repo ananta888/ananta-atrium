@@ -8,6 +8,7 @@ interface DebugState {
   tick: number
   menuVisible: boolean
   touchEnabled: boolean
+  position: { x: number; y: number; z: number }
   replay: { frames: number; duration: number; active: boolean; recording: boolean }
   settings: { language: string; uiScale: number; colorBlindSafe: boolean; reducedMotion: boolean; quality: string }
 }
@@ -60,6 +61,27 @@ test('agent detail shows trace, budget, diff and a desk monitor', async ({ page 
     return session.render.scene.getMeshByName('focused-monitor-plane')?.isEnabled() ?? false
   })
   expect(monitor).toBe(true)
+})
+
+test('teleport panel jumps to rooms and agents', async ({ page }) => {
+  await openDemo(page)
+  await page.keyboard.press('KeyT')
+  await expect(page.locator('.ui-teleport')).toBeVisible()
+  await page.locator('.ui-teleport select').nth(0).selectOption('forge')
+  await page.locator('.ui-teleport select').nth(1).selectOption('forge-lobby')
+  await page.getByRole('button', { name: 'Go to room' }).click()
+  await page.waitForTimeout(300)
+  const roomPosition = await debug(page)
+  expect(roomPosition.position.x).toBeCloseTo(4, 0)
+  expect(roomPosition.position.z).toBeCloseTo(4.25, 0)
+  expect(roomPosition.position.y).toBeGreaterThan(1)
+
+  await page.locator('.ui-teleport select').nth(2).selectOption({ index: 1 })
+  await page.getByRole('button', { name: 'Go to agent' }).click()
+  await page.waitForTimeout(300)
+  const agentPosition = await debug(page)
+  expect(Number.isFinite(agentPosition.position.x)).toBe(true)
+  expect(Number.isFinite(agentPosition.position.z)).toBe(true)
 })
 
 test('replay records frames, scrubs and returns live', async ({ page }) => {

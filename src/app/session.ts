@@ -58,6 +58,7 @@ export class AtriumSession {
   private replayTime = 0
   private lastRecordAt = 0
   private focusedAgent: string | null = null
+  private lastAgents: AgentState[] = []
   private displayNames: Record<string, string> = {}
   private readonly spectator = new URLSearchParams(window.location.search).get('spectator') === '1'
   private orbitAngle = 0
@@ -145,6 +146,8 @@ export class AtriumSession {
       },
       onChat: (request) => this.sendChat(request),
       onRenameAgent: (id, name) => this.renameAgent(id, name),
+      onTeleportRoom: (buildingId, roomId) => this.teleportToRoom(buildingId, roomId),
+      onTeleportAgent: (agentId) => this.teleportToAgent(agentId),
     })
     this.controller.setEnabled(!this.spectator)
     if (this.spectator) this.overlay.hideMenu()
@@ -233,6 +236,8 @@ export class AtriumSession {
       this.overlay.toggleAgentList()
     } else if (event.code === 'KeyR') {
       this.overlay.toggleReplay()
+    } else if (event.code === 'KeyT') {
+      this.overlay.toggleTeleport()
     } else if (event.code === 'F1') {
       this.controller.setEnabled(!this.spectator)
     if (this.spectator) this.overlay.hideMenu()
@@ -330,6 +335,28 @@ export class AtriumSession {
       const name = this.displayNames[agent.id]
       return name ? { ...agent, name } : agent
     })
+  }
+
+  private teleportToRoom(buildingId: string, roomId: string): void {
+    const building = campus.buildings.find((item) => item.id === buildingId)
+    const room = building?.rooms.find((item) => item.id === roomId)
+    if (!building || !room) return
+    const x = building.origin.x + (room.min.x + room.max.x) / 2
+    const z = building.origin.z + (room.min.z + room.max.z) / 2
+    this.controller.camera.position.set(x, building.origin.y + room.floor * building.floorHeight + 1.65, z)
+    this.audio.cue('record')
+  }
+
+  private teleportToAgent(agentId: string): void {
+    const agent = this.lastAgents.find((item) => item.id === agentId)
+    if (!agent?.position) return
+    const target = new Vector3(agent.position.x, agent.position.y, agent.position.z)
+    const offset = new Vector3(2.2, 0, 2.2)
+    const position = target.add(offset)
+    this.controller.camera.position.set(position.x, target.y + 1.65, position.z)
+    const yaw = Math.atan2(target.x - position.x, target.z - position.z)
+    this.controller.setYaw(yaw)
+    this.audio.cue('record')
   }
 
   private httpBase(): string {
@@ -441,6 +468,7 @@ export class AtriumSession {
     const simulated = this.sim.snapshot(this.source)
     const agents = this.replayActive ? this.replay.seek(this.replayTime) : simulated
     const shown = this.withDisplayNames(agents.length > 0 ? agents : simulated)
+    this.lastAgents = shown
     this.avatars.sync(shown, deltaSeconds, this.controller.camera.position)
 
     if (this.replayRecording && now - this.lastRecordAt >= RECORD_INTERVAL_MS) {

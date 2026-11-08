@@ -36,6 +36,8 @@ export interface OverlayCallbacks {
   onFocusAgent: (id: string | null) => void
   onChat: (request: ChatRequest) => Promise<ChatResult>
   onRenameAgent: (id: string, name: string) => void
+  onTeleportRoom: (buildingId: string, roomId: string) => void
+  onTeleportAgent: (agentId: string) => void
 }
 
 export interface PlayerPose {
@@ -142,6 +144,11 @@ export class Overlay {
   private readonly chatStatus: HTMLDivElement
   private readonly chatReplies: HTMLUListElement
   private readonly queueChip: HTMLSpanElement
+  private readonly teleportPanel: HTMLDivElement
+  private readonly teleportBuilding: HTMLSelectElement
+  private readonly teleportRoom: HTMLSelectElement
+  private readonly teleportAgent: HTMLSelectElement
+  private readonly teleportLabels: HTMLLabelElement[] = []
   private queueCounts = { active: 0, queued: 0 }
   private agentListSignature = ''
   private connection: 'connecting' | 'live' | 'offline' = 'offline'
@@ -174,6 +181,9 @@ export class Overlay {
     this.queueChip = element('span', 'ui-chip', t('queue.label', { active: 0, queued: 0 }))
     this.queueChip.style.pointerEvents = 'none'
     this.toolbar.append(this.queueChip)
+    const teleportButton = button(t('teleport.title'), 'ui-chip')
+    teleportButton.addEventListener('click', () => this.toggleTeleport())
+    this.toolbar.append(teleportButton)
     const agentsButton = button(t('agentList.title'), 'ui-chip')
     agentsButton.addEventListener('click', () => this.toggleAgentList())
     const replayButton = button(t('replay.title'), 'ui-chip')
@@ -280,7 +290,73 @@ export class Overlay {
       this.detailEvents,
       chatBox,
     )
+    this.teleportPanel = element('div', 'ui-panel ui-teleport')
+    this.teleportPanel.hidden = true
+    this.teleportPanel.setAttribute('aria-label', t('teleport.title'))
+    const teleportHeader = element('div', 'ui-panel-header')
+    teleportHeader.append(element('strong', undefined, t('teleport.title')))
+    const closeTeleport = button('×', 'ui-chip')
+    closeTeleport.setAttribute('aria-label', t('common.close'))
+    closeTeleport.addEventListener('click', () => { this.teleportPanel.hidden = true })
+    teleportHeader.append(closeTeleport)
+
+    const buildingField = element('div', 'ui-field')
+    const buildingLabel = element('label', undefined, t('teleport.building'))
+    this.teleportLabels.push(buildingLabel)
+    buildingField.append(buildingLabel)
+    this.teleportBuilding = element('select')
+    this.teleportBuilding.setAttribute('aria-label', t('teleport.building'))
+    for (const building of campus.buildings) this.teleportBuilding.append(this.option(building.name, building.id))
+    buildingField.append(this.teleportBuilding)
+
+    const roomField = element('div', 'ui-field')
+    const roomLabel = element('label', undefined, t('teleport.room'))
+    this.teleportLabels.push(roomLabel)
+    roomField.append(roomLabel)
+    this.teleportRoom = element('select')
+    this.teleportRoom.setAttribute('aria-label', t('teleport.room'))
+    roomField.append(this.teleportRoom)
+
+    const agentField = element('div', 'ui-field')
+    const agentLabel = element('label', undefined, t('teleport.agent'))
+    this.teleportLabels.push(agentLabel)
+    agentField.append(agentLabel)
+    this.teleportAgent = element('select')
+    this.teleportAgent.setAttribute('aria-label', t('teleport.agent'))
+    agentField.append(this.teleportAgent)
+
+    const roomButton = button(t('teleport.roomButton'), 'ui-button')
+    roomButton.addEventListener('click', () => {
+      this.callbacks.onTeleportRoom(this.teleportBuilding.value, this.teleportRoom.value)
+    })
+    const agentButton = button(t('teleport.agentButton'), 'ui-button')
+    agentButton.addEventListener('click', () => {
+      if (this.teleportAgent.value) this.callbacks.onTeleportAgent(this.teleportAgent.value)
+    })
+    const teleportActions = element('div', 'ui-actions')
+    teleportActions.append(roomButton, agentButton)
+
+    this.teleportPanel.append(
+      teleportHeader,
+      buildingField,
+      roomField,
+      agentField,
+      teleportActions,
+      element('div', 'ui-note', t('teleport.hint')),
+    )
+
+    const populateRooms = (): void => {
+      const buildingId = this.teleportBuilding.value
+      this.teleportRoom.replaceChildren()
+      for (const room of this.campus.buildings.find((b) => b.id === buildingId)?.rooms ?? []) {
+        this.teleportRoom.append(this.option(room.name, room.id))
+      }
+    }
+    this.teleportBuilding.addEventListener('change', populateRooms)
+    populateRooms()
+
     this.agentPanel.append(header, this.agentCount, filters, this.detailRoot, this.agentList, this.minimap)
+    this.root.append(this.teleportPanel)
 
     this.chatMode.addEventListener('change', () => this.syncChatMode())
     this.chatSend.addEventListener('click', () => void this.sendChat())
@@ -473,6 +549,8 @@ export class Overlay {
     }
     this.renderReplay()
     this.queueChip.textContent = t('queue.label', this.queueCounts)
+    const labels = [t('teleport.building'), t('teleport.room'), t('teleport.agent')]
+    this.teleportLabels.forEach((label, index) => { label.textContent = labels[index] ?? label.textContent })
   }
 
   applySettings(settings: Settings): void {
@@ -743,6 +821,16 @@ export class Overlay {
       const name = this.roomNames.get(option.value) ?? option.value
       option.textContent = `${name} (${counts.get(option.value) ?? 0})`
     }
+    const currentAgent = this.teleportAgent.value
+    const agentIds = new Set(agents.map((agent) => agent.id))
+    for (const option of Array.from(this.teleportAgent.options)) {
+      if (!agentIds.has(option.value)) option.remove()
+    }
+    const knownAgents = new Set(Array.from(this.teleportAgent.options).map((option) => option.value))
+    for (const agent of agents) {
+      if (!knownAgents.has(agent.id)) this.teleportAgent.append(this.option(`${agent.name} · ${agent.role}`, agent.id))
+    }
+    if (currentAgent && agentIds.has(currentAgent)) this.teleportAgent.value = currentAgent
     this.renderAgentList()
     this.renderDetail()
     this.renderMinimap()
@@ -1012,6 +1100,10 @@ export class Overlay {
     this.agentPanel.hidden = false
     this.renderAgentList()
     this.renderDetail()
+  }
+
+  toggleTeleport(): void {
+    this.teleportPanel.hidden = !this.teleportPanel.hidden
   }
 
   toggleReplay(): void {
