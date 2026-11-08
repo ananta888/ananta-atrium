@@ -114,6 +114,7 @@ export class Overlay {
   private readonly statusFilter: HTMLSelectElement
   private readonly roomFilter: HTMLSelectElement
   private connectStatus!: HTMLDivElement
+  private connectWarning!: HTMLDivElement
   private connectUrl!: HTMLInputElement
   private readonly replayRange: HTMLInputElement
   private readonly replayLabel: HTMLSpanElement
@@ -386,9 +387,12 @@ export class Overlay {
     field.append(label, this.connectUrl)
 
     this.connectStatus = element('div', 'ui-status', '')
+    this.connectWarning = element('div', 'ui-warning', '')
+    this.connectWarning.hidden = true
     const actions = element('div', 'ui-actions')
     const connect = button(t('connect.button'), 'ui-button primary')
     connect.addEventListener('click', () => {
+      this.syncConnectWarning()
       this.connectStatus.textContent = t('connect.checking')
       this.callbacks.onConnect(this.connectUrl.value.trim())
     })
@@ -400,7 +404,7 @@ export class Overlay {
     const settings = button(t('menu.settings'))
     settings.addEventListener('click', () => this.openSettings())
     actions.append(connect, demo, settings)
-    card.append(field, actions, this.connectStatus)
+    card.append(field, actions, this.connectWarning, this.connectStatus)
     return card
   }
 
@@ -455,6 +459,7 @@ export class Overlay {
   applySettings(settings: Settings): void {
     this.settings = settings
     setLanguage(settings.language)
+    if (this.connectUrl) this.syncConnectWarning()
     this.root.style.fontSize = `${16 * settings.uiScale}px`
     this.root.classList.toggle('is-reduced-motion', settings.reducedMotion)
     this.connectUrl.value = settings.collectorUrl
@@ -476,8 +481,24 @@ export class Overlay {
     this.menu.hidden = true
   }
 
+  private isLocalUrl(url: string): boolean {
+    try {
+      const host = new URL(url).hostname
+      return host === 'localhost' || host === '127.0.0.1' || host === '::1'
+    } catch {
+      return false
+    }
+  }
+
+  private syncConnectWarning(): void {
+    const blocked = window.location.protocol === 'https:' && this.isLocalUrl(this.connectUrl.value)
+    this.connectWarning.hidden = !blocked
+    this.connectWarning.textContent = blocked ? t('connect.localBlocked') : ''
+  }
+
   showConnect(visible: boolean): void {
     this.connectVisible = visible
+    this.syncConnectWarning()
     this.startCard.hidden = visible
     this.connectCard.hidden = !visible
     if (visible) {

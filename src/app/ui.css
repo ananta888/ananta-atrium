@@ -538,3 +538,14 @@
   outline: 3px solid var(--ui-accent-2);
   outline-offset: 1px;
 }
+
+.ui-warning {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(240, 198, 116, 0.45);
+  border-radius: var(--ui-radius-sm);
+  background: rgba(240, 198, 116, 0.12);
+  color: #f6d99a;
+  font-size: 13px;
+  line-height: 1.5;
+}

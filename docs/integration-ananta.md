@@ -153,6 +153,17 @@ Side chat needs both credentials: the Snake token in `Authorization` and the
 user JWT in `X-Ananta-User-Authorization`. The collector stores Snake tokens in
 `.atrium-chat-state.json` (gitignored, mode 0600).
 
+## Browser access to the local collector
+
+An HTTPS page cannot open `ws://127.0.0.1` (Chrome logs
+`ERR_BLOCKED_BY_LOCAL_NETWORK_ACCESS_CHECKS`). Live data therefore requires one of:
+
+- the app served locally (`npm run dev`, then `http://localhost:5173`),
+- a `wss://` tunnel/reverse proxy in front of the collector.
+
+The connect dialog shows this warning when an insecure local URL is used from an
+HTTPS page.
+
 ## Spectator control
 
 The collector exposes an operator-only revocation endpoint:
