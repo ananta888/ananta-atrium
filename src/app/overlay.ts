@@ -840,7 +840,7 @@ export class Overlay {
               [
                 agent.assignment.path.organizationId,
                 agent.assignment.path.projectId,
-                agent.assignment.path.teamId,
+                agent.assignment.path.teamName ?? agent.assignment.path.teamId,
                 agent.assignment.path.goalId,
                 agent.assignment.path.planNodeId,
               ]

@@ -320,6 +320,9 @@
             },
             "planNodeId": {
               "type": "string"
+            },
+            "teamName": {
+              "type": "string"
             }
           },
           "additionalProperties": false

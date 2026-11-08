@@ -19,7 +19,10 @@ describe('worker registry', () => {
       { id: 't2', title: 'Next queued task', status: 'todo', priority: 'high' },
       campus,
       1_760_000_000_000,
+      { teamId: 'team-1', teamName: 'Ananta Self Development', roleName: 'Reviewer' },
     )
+    expect(agent.role).toBe('Reviewer')
+    expect(agent.assignment?.path?.teamName).toBe('Ananta Self Development')
     expect(agent.id).toBe('worker:ananta-worker-1')
     expect(agent.name).toBe('ananta-worker-1')
     expect(agent.status).toBe('waiting')

@@ -96,6 +96,7 @@ export interface AgentAssignment {
   health?: string
   planned?: PlannedTask
   path?: {
+    teamName?: string
     teamId?: string
     projectId?: string
     organizationId?: string

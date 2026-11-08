@@ -476,6 +476,7 @@ export class Simulation {
             },
             path: {
               teamId: 'demo-team',
+              teamName: 'Demo Team',
               projectId: 'ananta-atrium',
               organizationId: 'demo-org',
               goalId: 'walkable-campus',

@@ -54,6 +54,11 @@ Returns the registered worker agents (`id`, `url`, `role`, `health`, `runtime`,
 with its current assigned task and the next queued task, plus the organization
 path (`team_id`, `project_id`, `goal_id`, `plan_node_id`).
 
+Role names come from `GET /teams` plus `GET /teams/roles`: `team_members` map
+`agent_url` to `role_id`, so a worker is displayed with its real team role
+(for example "Reviewer" or "Test Automation Engineer") instead of only the
+container name.
+
 ### `GET /tasks` (task fallback)
 
 Live hubs may run task workers without `agent_sessions` rows. The collector then

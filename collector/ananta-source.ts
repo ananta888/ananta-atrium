@@ -37,6 +37,12 @@ export interface HubTask {
   plan_node_id?: string | null
 }
 
+export interface TeamMembership {
+  teamId: string
+  teamName: string
+  roleName: string
+}
+
 export interface HubWorker {
   id: string
   url?: string
@@ -190,6 +196,7 @@ export function mapWorkerToAgent(
   plannedTask: HubTask | undefined,
   campus: CampusDef,
   nowMs: number,
+  membership?: TeamMembership,
 ): AgentState {
   const seat = seatFor(worker.id, campus.desks)
   const status: AgentStatus = currentTask
@@ -202,18 +209,26 @@ export function mapWorkerToAgent(
   const task = currentTask ?? plannedTask
   const workerUrl = worker.url ?? ''
   const roles = worker.worker_roles ?? []
+  const roleName = membership?.roleName ?? roles[0] ?? worker.role ?? 'worker'
   const assignment: AgentAssignment = {
     ...(workerUrl ? { workerUrl } : {}),
     ...(worker.runtime ? { runtime: worker.runtime } : {}),
     ...(worker.health ? { health: worker.health } : {}),
     ...(plannedTask ? { planned: plannedFromTask(plannedTask)! } : {}),
-    ...(taskPath(task) ? { path: taskPath(task)! } : {}),
+    ...(taskPath(task) || membership
+      ? {
+          path: {
+            ...(membership ? { teamId: membership.teamId, teamName: membership.teamName } : {}),
+            ...(taskPath(task) ?? {}),
+          },
+        }
+      : {}),
   }
   return {
     schemaVersion: AGENT_STATE_SCHEMA_VERSION,
     id: `worker:${worker.id}`,
     name: worker.id.slice(0, 64),
-    role: (roles[0] ?? worker.role ?? 'worker').slice(0, 64),
+    role: roleName.slice(0, 64),
     status,
     buildingId: seat?.buildingId ?? campus.buildings[0]?.id ?? 'campus',
     roomId: seat?.roomId ?? 'lobby',
@@ -448,6 +463,41 @@ export class AnantaHubSource {
       } catch (error) {
         log('warn', 'worker registry unavailable', { error: (error as Error).message })
       }
+      const memberships = new Map<string, TeamMembership>()
+      try {
+        const teamsPayload = await this.getJson('/teams')
+        const rolePayload = await this.getJson('/teams/roles')
+        const teamRows = Array.isArray((teamsPayload as Record<string, unknown>)?.data)
+          ? ((teamsPayload as Record<string, unknown>).data as unknown[])
+          : []
+        const roleRows = Array.isArray((rolePayload as Record<string, unknown>)?.data)
+          ? ((rolePayload as Record<string, unknown>).data as unknown[])
+          : []
+        const roleNames = new Map<string, string>()
+        for (const role of roleRows) {
+          const record = typeof role === 'object' && role !== null ? (role as Record<string, unknown>) : null
+          if (record && typeof record.id === 'string' && typeof record.name === 'string') {
+            roleNames.set(record.id, record.name)
+          }
+        }
+        for (const team of teamRows) {
+          const record = typeof team === 'object' && team !== null ? (team as Record<string, unknown>) : null
+          if (!record || !Array.isArray(record.members)) continue
+          const teamId = typeof record.id === 'string' ? record.id : ''
+          const teamName = typeof record.name === 'string' ? record.name : teamId
+          for (const member of record.members as unknown[]) {
+            const item = typeof member === 'object' && member !== null ? (member as Record<string, unknown>) : null
+            if (!item || typeof item.agent_url !== 'string' || typeof item.role_id !== 'string') continue
+            memberships.set(item.agent_url, {
+              teamId,
+              teamName,
+              roleName: roleNames.get(item.role_id) ?? 'team member',
+            })
+          }
+        }
+      } catch (error) {
+        log('warn', 'team roles unavailable', { error: (error as Error).message })
+      }
       const taskById = new Map(tasks.map((task) => [task.id, task]))
 
       this.status.reachable = true
@@ -476,7 +526,7 @@ export class AnantaHubSource {
             .sort((a, b) => Number(b.updated_at ?? 0) - Number(a.updated_at ?? 0))
           const current = assigned[0]
           const planned = unassignedQueue[index]
-          return mapWorkerToAgent(worker, current, planned, this.campus, now)
+          return mapWorkerToAgent(worker, current, planned, this.campus, now, worker.url ? memberships.get(worker.url) : undefined)
         })
         return this.enrich(mapped)
       }
