@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { validateManifest } from '../src/world/assets.ts'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
-const manifest = validateManifest(JSON.parse(readFileSync(join(root, 'assets/manifest.json'), 'utf8')))
+const manifest = validateManifest(JSON.parse(readFileSync(join(root, 'public/assets/manifest.json'), 'utf8')))
 
 let failures = 0
 for (const asset of manifest.assets) {
@@ -17,7 +17,7 @@ for (const asset of manifest.assets) {
   for (const [kind, path] of Object.entries(asset.variants)) {
     if (!path) continue
     try {
-      const bytes = readFileSync(join(root, path))
+      const bytes = readFileSync(join(root, 'public', path))
       if (asset.sha256) {
         const digest = createHash('sha256').update(bytes).digest('hex')
         if (digest !== asset.sha256) {

@@ -160,7 +160,7 @@ export class AtriumSession {
 
   private async applyAssets(): Promise<void> {
     const fetcher: typeof fetch = (input, init) => fetch(input, init)
-    const manifest = await loadManifest('.', fetcher)
+    const manifest = await loadManifest('./', fetcher)
     const entry = manifest.assets.find((asset) => asset.id === 'plaza-grid')
     if (!entry) return
     const texture = (await loadAsset(entry, {

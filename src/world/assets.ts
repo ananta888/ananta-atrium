@@ -117,7 +117,7 @@ export async function loadAsset(entry: ManifestEntry, deps: AssetLoadDeps): Prom
 }
 
 export async function loadManifest(baseUrl: string, fetcher: typeof fetch): Promise<AssetManifest> {
-  const response = await fetcher(`${baseUrl}/assets/manifest.json`)
+  const response = await fetcher(`${baseUrl}assets/manifest.json`)
   if (!response.ok) throw new AssetError(`manifest returned ${response.status}`)
   return validateManifest(await response.json())
 }

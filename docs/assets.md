@@ -2,7 +2,7 @@
 
 ## Manifest and import path
 
-`assets/manifest.json` is the only entry point for external assets. Every entry
+`public/assets/manifest.json` is the only entry point for external assets. Every entry
 needs an `id`, `kind`, `licence`, `source`, an optional deterministic `sha256`
 and one or more `variants`.
 
@@ -32,7 +32,7 @@ fails the boot, which is intentional.
 
 ## Adding an asset
 
-1. Put the file under `assets/`.
+1. Put the file under `public/assets/` (Vite copies `public/` into `dist/`).
 2. Add the manifest entry with source URL and licence.
 3. Compute `sha256sum <file>` and paste it into the entry.
 4. Add a row to `ATTRIBUTION.md`.

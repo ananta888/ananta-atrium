@@ -13,7 +13,7 @@ import {
 
 const here = dirname(fileURLToPath(import.meta.url))
 const manifest = validateManifest(
-  JSON.parse(readFileSync(join(here, '../../assets/manifest.json'), 'utf8')),
+  JSON.parse(readFileSync(join(here, '../../public/assets/manifest.json'), 'utf8')),
 )
 
 const entry: ManifestEntry = {
