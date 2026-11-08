@@ -818,6 +818,7 @@ export class Overlay {
       agent.role,
       t('detail.task') + ': ' + agent.task.title,
       t('detail.progress') + ': ' + `${Math.round(agent.task.progress * 100)}%`,
+      t('detail.source', { source: agent.source }),
     ].join('\n')
 
     this.detailBudgets.replaceChildren()
