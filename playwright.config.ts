@@ -14,16 +14,20 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: [
     {
-      command: 'npm run dev',
+      command: 'npx vite --host 127.0.0.1 --port 5173 --strictPort',
       url: 'http://127.0.0.1:5173',
       reuseExistingServer: true,
-      timeout: 60_000,
+      timeout: 120_000,
+      stdout: 'pipe',
+      stderr: 'pipe',
     },
     {
       command: 'ATRIUM_ADMIN_TOKEN=test-admin ATRIUM_COLLECTOR_PORT=8787 npm run collector:dev',
       url: 'http://127.0.0.1:8787/health',
       reuseExistingServer: true,
-      timeout: 60_000,
+      timeout: 120_000,
+      stdout: 'pipe',
+      stderr: 'pipe',
     },
   ],
 })

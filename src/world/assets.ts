@@ -86,9 +86,7 @@ export async function sha256Hex(buffer: ArrayBuffer): Promise<string> {
     const digest = await globalThis.crypto.subtle.digest('SHA-256', buffer)
     return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
   }
-  // Node fallback for environments without WebCrypto.
-  const { createHash } = await import('node:crypto')
-  return createHash('sha256').update(Buffer.from(buffer)).digest('hex')
+  throw new AssetError('SHA-256 is unavailable: WebCrypto is required')
 }
 
 export interface AssetLoadDeps {
