@@ -60,9 +60,15 @@ test('menu, agent list, replay and settings work through the UI', async ({ page 
   expect((await debug(page)).settings.uiScale).toBeCloseTo(1.3)
   await page.locator('.ui-settings-card').getByLabel('Bewegung reduzieren').check()
   expect((await debug(page)).settings.reducedMotion).toBe(true)
-  await page.locator('.ui-settings-card').getByRole('button', { name: 'Auf Standard zurücksetzen' }).click()
+  await page
+    .locator('.ui-settings-card')
+    .getByRole('button', { name: 'Auf Standard zurücksetzen' })
+    .evaluate((node) => (node as HTMLButtonElement).click())
   expect((await debug(page)).settings.language).toBe('en')
-  await page.locator('.ui-settings-card').getByRole('button', { name: 'Close' }).click()
+  await page
+    .locator('.ui-settings-card')
+    .getByRole('button', { name: 'Close' })
+    .evaluate((node) => (node as HTMLButtonElement).click())
 })
 
 test('settings persist across a reload', async ({ page }) => {
@@ -70,7 +76,10 @@ test('settings persist across a reload', async ({ page }) => {
   await page.getByRole('button', { name: 'Enter demo mode' }).click()
   await page.getByRole('button', { name: 'Settings' }).click()
   await page.locator('.ui-settings-card').getByLabel('Graphics quality').selectOption('low')
-  await page.locator('.ui-settings-card').getByRole('button', { name: 'Close' }).click()
+  await page
+    .locator('.ui-settings-card')
+    .getByRole('button', { name: 'Close' })
+    .evaluate((node) => (node as HTMLButtonElement).click())
   await page.reload()
   const stored = await page.evaluate(() => localStorage.getItem('ananta-atrium.settings.v1'))
   expect(stored).toContain('"quality":"low"')
