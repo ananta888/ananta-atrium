@@ -772,8 +772,13 @@ export class Overlay {
     const wrapper = element('div', 'ui-meter')
     const ratio =
       bucket.limit !== null && bucket.limit > 0 ? Math.max(0, Math.min(1, (bucket.used ?? 0) / bucket.limit)) : 0
-    const used = bucket.used === null ? t('detail.unknown') : `${Math.round(bucket.used)}${bucket.unit === 'ms' ? 'ms' : ''}`
-    const limit = bucket.limit === null ? t('detail.unknown') : `${Math.round(bucket.limit)}${bucket.unit === 'ms' ? 'ms' : ''}`
+    const format = (value: number): string => {
+      if (bucket.unit !== 'ms') return `${Math.round(value)}`
+      const seconds = Math.round(value / 1000)
+      return seconds >= 60 ? `${Math.floor(seconds / 60)}m ${seconds % 60}s` : `${seconds}s`
+    }
+    const used = bucket.used === null ? t('detail.unknown') : format(bucket.used)
+    const limit = bucket.limit === null ? t('detail.unknown') : format(bucket.limit)
     const track = element('div', 'ui-meter-track')
     const fill = element('div', 'ui-meter-fill')
     fill.style.width = `${Math.round(ratio * 100)}%`

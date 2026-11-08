@@ -16,7 +16,7 @@ const browser = await chromium.launch()
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
 
 try {
-  await page.goto('http://127.0.0.1:5190/', { waitUntil: 'domcontentloaded' })
+  await page.goto('http://127.0.0.1:5190/?collector=ws://127.0.0.1:9/stream', { waitUntil: 'domcontentloaded' })
   await page.getByRole('button', { name: 'Enter demo mode' }).waitFor()
   await page.waitForTimeout(800)
   await page.screenshot({ path: join(outDir, 'menu.png') })
@@ -54,6 +54,11 @@ try {
   await page.waitForTimeout(1400)
   await page.screenshot({ path: join(outDir, 'avatars.png') })
   await page.evaluate(() => window.__atrium.debugPause(false))
+
+  await page.reload()
+  await page.getByRole('button', { name: 'Enter demo mode' }).click()
+  await page.waitForFunction(() => window.__atrium?.getDebugState().agents === 50)
+  await page.waitForTimeout(600)
 
   await page.evaluate(() => window.__atrium.debugTeleport(4, 1.8, 30))
   await page.keyboard.press('KeyL')

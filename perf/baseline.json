@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-11-08T14:47:57.814Z",
+  "capturedAt": "2026-11-08T16:16:36.437Z",
   "runs": 2,
   "samplesPerPoint": 12,
   "environment": {
@@ -8,63 +8,63 @@
   },
   "waypoints": {
     "plaza": {
-      "fps": 5.019472090004328,
+      "fps": 5.774743745742733,
       "drawCalls": 688,
-      "meshes": 1946,
+      "meshes": 1947,
       "visibleRooms": 5,
       "naiveDrawCalls": 1558,
       "cullingDropPercent": 55.8
     },
     "lobby": {
-      "fps": 6.600514840166188,
+      "fps": 7.24532676423446,
       "drawCalls": 341,
-      "meshes": 1946,
+      "meshes": 1947,
       "visibleRooms": 16,
       "naiveDrawCalls": 1563,
       "cullingDropPercent": 78.2
     },
     "office": {
-      "fps": 8.12435682174834,
+      "fps": 8.277917276009966,
       "drawCalls": 278,
-      "meshes": 1946,
+      "meshes": 1947,
       "visibleRooms": 12,
       "naiveDrawCalls": 1530,
       "cullingDropPercent": 81.8
     },
     "stairs": {
-      "fps": 8.175055181632437,
+      "fps": 9.671179883945863,
       "drawCalls": 247,
-      "meshes": 1946,
+      "meshes": 1947,
       "visibleRooms": 16
     },
     "floor-1": {
-      "fps": 8.63408737696054,
-      "drawCalls": 331,
-      "meshes": 1946,
+      "fps": 9.308386856562056,
+      "drawCalls": 359,
+      "meshes": 1947,
       "visibleRooms": 16
     },
     "forge": {
-      "fps": 7.389526577655788,
-      "drawCalls": 455,
-      "meshes": 1946,
+      "fps": 7.767995857068889,
+      "drawCalls": 451,
+      "meshes": 1947,
       "visibleRooms": 21
     },
     "observatory": {
-      "fps": 8.275405494879454,
+      "fps": 8.862891075072605,
       "drawCalls": 332,
-      "meshes": 1946,
+      "meshes": 1947,
       "visibleRooms": 17
     },
     "library": {
-      "fps": 9.23218956762578,
-      "drawCalls": 136,
-      "meshes": 1946,
+      "fps": 10.338410641681323,
+      "drawCalls": 151,
+      "meshes": 1947,
       "visibleRooms": 12
     },
     "studio": {
-      "fps": 8.271982794285975,
-      "drawCalls": 143,
-      "meshes": 1946,
+      "fps": 10.372726644066505,
+      "drawCalls": 145,
+      "meshes": 1947,
       "visibleRooms": 12
     }
   }
