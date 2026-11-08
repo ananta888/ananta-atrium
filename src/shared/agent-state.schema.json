@@ -267,6 +267,65 @@
         }
       },
       "additionalProperties": false
+    },
+    "assignment": {
+      "type": "object",
+      "properties": {
+        "workerUrl": {
+          "type": "string"
+        },
+        "runtime": {
+          "type": "string"
+        },
+        "health": {
+          "type": "string"
+        },
+        "planned": {
+          "type": "object",
+          "required": [
+            "id",
+            "title",
+            "status"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "priority": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "path": {
+          "type": "object",
+          "properties": {
+            "teamId": {
+              "type": "string"
+            },
+            "projectId": {
+              "type": "string"
+            },
+            "organizationId": {
+              "type": "string"
+            },
+            "goalId": {
+              "type": "string"
+            },
+            "planNodeId": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": true,

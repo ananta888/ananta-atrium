@@ -1,4 +1,4 @@
-import type { AgentSource, AgentStatus, AgentTrace } from '../shared/agent-state.js'
+import type { AgentAssignment, AgentSource, AgentStatus, AgentTrace } from '../shared/agent-state.js'
 
 export interface AgentIdentity {
   id: string
@@ -81,4 +81,5 @@ export interface LiveOverride {
   source: AgentSource
   stale: boolean
   trace?: AgentTrace
+  assignment?: AgentAssignment
 }

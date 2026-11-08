@@ -819,6 +819,35 @@ export class Overlay {
       t('detail.task') + ': ' + agent.task.title,
       t('detail.progress') + ': ' + `${Math.round(agent.task.progress * 100)}%`,
       t('detail.source', { source: agent.source }),
+      ...(agent.assignment?.workerUrl
+        ? [
+            t('detail.worker') +
+              ': ' +
+              `${agent.assignment.workerUrl} · ${agent.assignment.runtime ?? '—'} · ${agent.assignment.health ?? '—'}`,
+          ]
+        : []),
+      ...(agent.assignment?.planned
+        ? [
+            t('detail.planned') +
+              ': ' +
+              `${agent.assignment.planned.title} (${agent.assignment.planned.status}${agent.assignment.planned.priority ? `, ${agent.assignment.planned.priority}` : ''})`,
+          ]
+        : []),
+      ...(agent.assignment?.path
+        ? [
+            t('detail.path') +
+              ': ' +
+              [
+                agent.assignment.path.organizationId,
+                agent.assignment.path.projectId,
+                agent.assignment.path.teamId,
+                agent.assignment.path.goalId,
+                agent.assignment.path.planNodeId,
+              ]
+                .filter(Boolean)
+                .join(' / '),
+          ]
+        : []),
     ].join('\n')
 
     this.detailBudgets.replaceChildren()

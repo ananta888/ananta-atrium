@@ -47,6 +47,13 @@ Rules:
 
 ## Endpoints the collector uses
 
+### `GET /api/workers` (primary live source)
+
+Returns the registered worker agents (`id`, `url`, `role`, `health`, `runtime`,
+`worker_roles`, `capabilities`). The collector maps one atrium agent per worker,
+with its current assigned task and the next queued task, plus the organization
+path (`team_id`, `project_id`, `goal_id`, `plan_node_id`).
+
 ### `GET /tasks` (task fallback)
 
 Live hubs may run task workers without `agent_sessions` rows. The collector then

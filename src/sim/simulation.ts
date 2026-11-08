@@ -163,6 +163,7 @@ export class Simulation {
           ? { tokensPerSecond: state.metrics.tokensPerSecond }
           : {}),
         ...(state.trace !== undefined ? { trace: state.trace } : {}),
+        ...(state.assignment !== undefined ? { assignment: state.assignment } : {}),
       }
       if (state.position) agent.position = clone(state.position)
       if (state.status === 'offline') {
@@ -463,8 +464,27 @@ export class Simulation {
         if (!live && source === 'fake') {
           const trace = this.fakeTrace(agent.identity.id)
           if (trace) state.trace = trace
+          state.assignment = {
+            workerUrl: `fake://${agent.identity.id}`,
+            runtime: 'simulated',
+            health: 'online',
+            planned: {
+              id: `planned-${agent.identity.id}`,
+              title: 'Review the next queued task',
+              status: 'todo',
+              priority: 'medium',
+            },
+            path: {
+              teamId: 'demo-team',
+              projectId: 'ananta-atrium',
+              organizationId: 'demo-org',
+              goalId: 'walkable-campus',
+              planNodeId: 'node-2',
+            },
+          }
         }
         if (live?.trace !== undefined) state.trace = live.trace
+        if (live?.assignment !== undefined) state.assignment = live.assignment
         if (live?.tokensPerSecond !== undefined) {
           state.metrics = { tokensPerSecond: live.tokensPerSecond }
         }

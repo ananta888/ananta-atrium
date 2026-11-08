@@ -1,4 +1,4 @@
-import type { AgentState, AgentStatus } from '../src/shared/agent-state.js'
+import type { AgentState, AgentStatus, AgentAssignment, PlannedTask } from '../src/shared/agent-state.js'
 import { AGENT_STATE_SCHEMA_VERSION } from '../src/shared/agent-state.js'
 import type { CampusDef } from '../src/shared/campus.js'
 import { hashString } from '../src/sim/rng.js'
@@ -30,6 +30,21 @@ export interface HubTask {
   updated_at?: number
   created_at?: number
   task_kind?: string | null
+  team_id?: string | null
+  project_id?: string | null
+  organization_id?: string | null
+  goal_id?: string | null
+  plan_node_id?: string | null
+}
+
+export interface HubWorker {
+  id: string
+  url?: string
+  role?: string
+  health?: string
+  runtime?: string
+  capabilities?: string[]
+  worker_roles?: string[]
 }
 
 export interface TaskDetailCacheEntry {
@@ -146,6 +161,74 @@ const TASK_STATUS_MAP: Record<string, AgentStatus> = {
   completed: 'idle',
   failed: 'offline',
   cancelled: 'offline',
+}
+
+function taskPath(task: HubTask | undefined): AgentAssignment['path'] | undefined {
+  if (!task) return undefined
+  const path: NonNullable<AgentAssignment['path']> = {}
+  if (task.team_id) path.teamId = task.team_id
+  if (task.project_id) path.projectId = task.project_id
+  if (task.organization_id) path.organizationId = task.organization_id
+  if (task.goal_id) path.goalId = task.goal_id
+  if (task.plan_node_id) path.planNodeId = task.plan_node_id
+  return Object.keys(path).length > 0 ? path : undefined
+}
+
+function plannedFromTask(task: HubTask | undefined): PlannedTask | undefined {
+  if (!task) return undefined
+  return {
+    id: task.id,
+    title: (task.title ?? 'Queued task').slice(0, 200),
+    status: String(task.status ?? 'todo'),
+    ...(task.priority ? { priority: task.priority } : {}),
+  }
+}
+
+export function mapWorkerToAgent(
+  worker: HubWorker,
+  currentTask: HubTask | undefined,
+  plannedTask: HubTask | undefined,
+  campus: CampusDef,
+  nowMs: number,
+): AgentState {
+  const seat = seatFor(worker.id, campus.desks)
+  const status: AgentStatus = currentTask
+    ? String(currentTask.status).toLowerCase() === 'waiting_for_review'
+      ? 'reviewing'
+      : ['paused', 'blocked_by_dependency', 'proposing'].includes(String(currentTask.status).toLowerCase())
+        ? 'waiting'
+        : 'working'
+    : 'idle'
+  const task = currentTask ?? plannedTask
+  const workerUrl = worker.url ?? ''
+  const roles = worker.worker_roles ?? []
+  const assignment: AgentAssignment = {
+    ...(workerUrl ? { workerUrl } : {}),
+    ...(worker.runtime ? { runtime: worker.runtime } : {}),
+    ...(worker.health ? { health: worker.health } : {}),
+    ...(plannedTask ? { planned: plannedFromTask(plannedTask)! } : {}),
+    ...(taskPath(task) ? { path: taskPath(task)! } : {}),
+  }
+  return {
+    schemaVersion: AGENT_STATE_SCHEMA_VERSION,
+    id: `worker:${worker.id}`,
+    name: worker.id.slice(0, 64),
+    role: (roles[0] ?? worker.role ?? 'worker').slice(0, 64),
+    status,
+    buildingId: seat?.buildingId ?? campus.buildings[0]?.id ?? 'campus',
+    roomId: seat?.roomId ?? 'lobby',
+    deskId: seat?.id ?? 'unassigned',
+    task: {
+      title: (currentTask?.title ?? plannedTask?.title ?? 'Waiting for assignment').slice(0, 200),
+      progress: currentTask ? (status === 'reviewing' ? 0.9 : 0.5) : 0.1,
+      ...(task ? { taskId: task.id } : {}),
+    },
+    activity: { kind: status === 'working' ? 'typing' : status === 'reviewing' ? 'reviewing' : status === 'waiting' ? 'thinking' : 'idle' },
+    updatedAt: new Date(nowMs).toISOString(),
+    source: 'live',
+    stale: false,
+    assignment,
+  }
 }
 
 export function mapTaskToAgent(task: HubTask, campus: CampusDef, nowMs: number): AgentState {
@@ -355,11 +438,49 @@ export class AnantaHubSource {
       } catch (error) {
         log('warn', 'hub tasks unavailable, using session titles', { error: (error as Error).message })
       }
+      let workers: HubWorker[] = []
+      try {
+        const payload = await this.getJson('/api/workers')
+        const data = typeof payload === 'object' && payload !== null ? (payload as Record<string, unknown>).data : null
+        if (typeof data === 'object' && data !== null && Array.isArray((data as Record<string, unknown>).items)) {
+          workers = (data as Record<string, unknown>).items as HubWorker[]
+        }
+      } catch (error) {
+        log('warn', 'worker registry unavailable', { error: (error as Error).message })
+      }
       const taskById = new Map(tasks.map((task) => [task.id, task]))
 
       this.status.reachable = true
       this.status.lastError = null
       this.status.lastSuccessAt = now
+      if (workers.length > 0) {
+        const unassignedQueue = tasks
+          .filter(
+            (task) =>
+              !task.assigned_agent_url &&
+              ['todo', 'paused', 'proposing'].includes(String(task.status ?? '').toLowerCase()),
+          )
+          .sort((a, b) => {
+            const rank: Record<string, number> = { high: 0, medium: 1, low: 2 }
+            const diff = (rank[String(a.priority ?? 'medium')] ?? 1) - (rank[String(b.priority ?? 'medium')] ?? 1)
+            return diff !== 0 ? diff : Number(b.updated_at ?? 0) - Number(a.updated_at ?? 0)
+          })
+        const currentStatuses = new Set(['proposing', 'running', 'paused', 'blocked_by_dependency', 'waiting_for_review', 'updated'])
+        const mapped = workers.map((worker, index) => {
+          const assigned = tasks
+            .filter(
+              (task) =>
+                task.assigned_agent_url === worker.url &&
+                currentStatuses.has(String(task.status ?? '').toLowerCase()),
+            )
+            .sort((a, b) => Number(b.updated_at ?? 0) - Number(a.updated_at ?? 0))
+          const current = assigned[0]
+          const planned = unassignedQueue[index]
+          return mapWorkerToAgent(worker, current, planned, this.campus, now)
+        })
+        return this.enrich(mapped)
+      }
+
       if (sessions.length > 0) {
         const mapped = sessions.map((session) =>
           mapSessionToAgent(session, session.task_id ? taskById.get(session.task_id) : undefined, this.campus, now),

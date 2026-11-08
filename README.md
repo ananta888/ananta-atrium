@@ -30,8 +30,8 @@ Live mode needs `ATRIUM_SOURCE=live`, `ATRIUM_HUB_URL` and `ATRIUM_HUB_TOKEN`
 
 ## Live operations (M6)
 
-With a running hub and token, agents expose their real work: current task,
-progress, time/token budgets, retry attempts, recent events and the newest
+With a running hub and token, each worker agent exposes its real identity and work: current task,
+planned next task, organization path, progress, time/token budgets, retry attempts, recent events and the newest
 workspace diff. The selected agent's desk monitor renders the same trace, and
 the detail panel offers two clearly separated chat modes: **Ask** (AI-Snake side
 conversation, never touches the task) and **Steer task** (`inject_instruction`).

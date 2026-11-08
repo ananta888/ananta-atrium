@@ -83,6 +83,27 @@ export interface AgentTrace {
   events?: TraceEvent[]
 }
 
+export interface PlannedTask {
+  id: string
+  title: string
+  status: string
+  priority?: string
+}
+
+export interface AgentAssignment {
+  workerUrl?: string
+  runtime?: string
+  health?: string
+  planned?: PlannedTask
+  path?: {
+    teamId?: string
+    projectId?: string
+    organizationId?: string
+    goalId?: string
+    planNodeId?: string
+  }
+}
+
 export interface AgentState {
   schemaVersion: typeof AGENT_STATE_SCHEMA_VERSION
   id: string
@@ -100,6 +121,7 @@ export interface AgentState {
   stale: boolean
   position?: Vec3
   trace?: AgentTrace
+  assignment?: AgentAssignment
 }
 
 export interface AgentSnapshot {
